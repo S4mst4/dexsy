@@ -45,6 +45,9 @@ class DeckBuilder {
         
         // Add datalist for set suggestions
         this.createSetSuggestions();
+
+        // Initialize trainer subtype selector
+        this.trainerSubtypeSelector = document.getElementById('trainer-subtype-selector');
     }
 
     setupEventListeners() {
@@ -53,6 +56,13 @@ class DeckBuilder {
             if (e.key === 'Enter' && this.searchInput.value.trim()) {
                 this.searchCards();
             }
+        });
+        
+        // Add card type selector change listener
+        const cardTypeSelector = document.getElementById('card-type-selector');
+        cardTypeSelector.addEventListener('change', () => {
+            const selectedType = cardTypeSelector.value;
+            this.trainerSubtypeSelector.style.display = selectedType === 'trainer' ? 'block' : 'none';
         });
         
         // Add undo button listener
@@ -83,6 +93,14 @@ class DeckBuilder {
     // Add new method to build search query
     buildSearchQuery(query) {
         let searchQuery = '';
+        
+        // Get selected card type
+        const cardTypeSelector = document.getElementById('card-type-selector');
+        const selectedType = cardTypeSelector ? cardTypeSelector.value : '';
+        
+        // Get selected trainer subtype if applicable
+        const selectedTrainerSubtype = selectedType === 'trainer' && this.trainerSubtypeSelector ? 
+            this.trainerSubtypeSelector.value : '';
         
         // Check for rarity prefixes
         if (query.startsWith('$V') && !query.includes('$VMAX') && !query.includes('$VSTAR')) {
@@ -133,6 +151,23 @@ class DeckBuilder {
         // Default to searching by card name
         else {
             searchQuery = `name:"*${query}*"`;
+        }
+        
+        // Add supertype filter if a type is selected
+        if (selectedType) {
+            const supertypeQuery = selectedType === 'pokemon' ? 'supertype:"Pokémon"' : 
+                                 selectedType === 'trainer' ? 'supertype:"Trainer"' : 
+                                 selectedType === 'energy' ? 'supertype:"Energy"' : '';
+            
+            if (supertypeQuery) {
+                searchQuery = searchQuery ? `${searchQuery} AND ${supertypeQuery}` : supertypeQuery;
+            }
+
+            // Add trainer subtype filter if applicable
+            if (selectedType === 'trainer' && selectedTrainerSubtype) {
+                const subtypeQuery = `subtypes:"${selectedTrainerSubtype}"`;
+                searchQuery = searchQuery ? `${searchQuery} AND ${subtypeQuery}` : subtypeQuery;
+            }
         }
         
         return searchQuery;

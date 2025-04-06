@@ -61,6 +61,19 @@
         </div>
 
         <div class="search-section">
+            <select id="card-type-selector">
+                <option value="">All Types</option>
+                <option value="pokemon">Pokémon</option>
+                <option value="trainer">Trainer</option>
+                <option value="energy">Energy</option>
+            </select>
+            <select id="trainer-subtype-selector" style="display: none;">
+                <option value="">All Trainer Types</option>
+                <option value="item">Item</option>
+                <option value="supporter">Supporter</option>
+                <option value="pokemon tool">Pokémon Tool</option>
+                <option value="stadium">Stadium</option>
+            </select>
             <input type="text" id="search-input" placeholder="🔍 Search for Pokémon™ cards...">
             <button id="search-button">🔎 Search</button>
         </div>
