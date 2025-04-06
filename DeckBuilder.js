@@ -46,8 +46,10 @@ class DeckBuilder {
         // Add datalist for set suggestions
         this.createSetSuggestions();
 
-        // Initialize trainer subtype selector
+        // Initialize selectors
         this.trainerSubtypeSelector = document.getElementById('trainer-subtype-selector');
+        this.pokemonTypeSelector = document.getElementById('pokemon-type-selector');
+        this.pokemonStageSelector = document.getElementById('pokemon-stage-selector');
     }
 
     setupEventListeners() {
@@ -63,6 +65,8 @@ class DeckBuilder {
         cardTypeSelector.addEventListener('change', () => {
             const selectedType = cardTypeSelector.value;
             this.trainerSubtypeSelector.style.display = selectedType === 'trainer' ? 'block' : 'none';
+            this.pokemonTypeSelector.style.display = selectedType === 'pokemon' ? 'block' : 'none';
+            this.pokemonStageSelector.style.display = selectedType === 'pokemon' ? 'block' : 'none';
         });
         
         // Add undo button listener
@@ -101,6 +105,14 @@ class DeckBuilder {
         // Get selected trainer subtype if applicable
         const selectedTrainerSubtype = selectedType === 'trainer' && this.trainerSubtypeSelector ? 
             this.trainerSubtypeSelector.value : '';
+            
+        // Get selected Pokémon type if applicable
+        const selectedPokemonType = selectedType === 'pokemon' && this.pokemonTypeSelector ? 
+            this.pokemonTypeSelector.value : '';
+            
+        // Get selected Pokémon stage if applicable
+        const selectedPokemonStage = selectedType === 'pokemon' && this.pokemonStageSelector ? 
+            this.pokemonStageSelector.value : '';
         
         // Check for rarity prefixes
         if (query.startsWith('$V') && !query.includes('$VMAX') && !query.includes('$VSTAR')) {
@@ -167,6 +179,31 @@ class DeckBuilder {
             if (selectedType === 'trainer' && selectedTrainerSubtype) {
                 const subtypeQuery = `subtypes:"${selectedTrainerSubtype}"`;
                 searchQuery = searchQuery ? `${searchQuery} AND ${subtypeQuery}` : subtypeQuery;
+            }
+            
+            // Add Pokémon type filter if applicable
+            if (selectedType === 'pokemon' && selectedPokemonType) {
+                const typeQuery = `types:"${selectedPokemonType}"`;
+                searchQuery = searchQuery ? `${searchQuery} AND ${typeQuery}` : typeQuery;
+            }
+            
+            // Add Pokémon stage filter if applicable
+            if (selectedType === 'pokemon' && selectedPokemonStage) {
+                let stageQuery = '';
+                if (selectedPokemonStage === 'V') {
+                    stageQuery = `(name:"*-V" OR name:"* V" OR name:" V " OR subtypes:"V" OR name:" V") -name:"VMAX" -name:"VSTAR"`;
+                } else if (selectedPokemonStage === 'VSTAR') {
+                    stageQuery = `(name:"*VSTAR*" OR subtypes:"VSTAR")`;
+                } else if (selectedPokemonStage === 'VMAX') {
+                    stageQuery = `(name:"*VMAX*" OR subtypes:"VMAX")`;
+                } else if (selectedPokemonStage === 'EX') {
+                    stageQuery = `(name:"*-EX" OR name:"* EX" OR name:" EX " OR subtypes:"EX")`;
+                } else if (selectedPokemonStage === 'GX') {
+                    stageQuery = `(name:"*-GX" OR name:"* GX" OR name:" GX " OR subtypes:"GX")`;
+                } else {
+                    stageQuery = `subtypes:"${selectedPokemonStage}"`;
+                }
+                searchQuery = searchQuery ? `${searchQuery} AND ${stageQuery}` : stageQuery;
             }
         }
         

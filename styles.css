@@ -148,10 +148,10 @@
             align-items: center;
         }
         
-        #card-type-selector, #trainer-subtype-selector {
+        #card-type-selector, #trainer-subtype-selector, #pokemon-type-selector, #pokemon-stage-selector {
             padding: 10px 15px;
-            background: var(--glass-bg);
-            color: var(--text-color);
+            background: #ff0000;
+            color: #8a2be2;
             border: 2px solid var(--glass-border);
             border-radius: 25px;
             cursor: pointer;
@@ -159,17 +159,26 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(5px);
             min-width: 120px;
+            font-weight: bold;
         }
         
-        #card-type-selector:hover, #trainer-subtype-selector:hover {
+        #card-type-selector:hover, #trainer-subtype-selector:hover, #pokemon-type-selector:hover, #pokemon-stage-selector:hover {
             border-color: var(--pokemon-blue);
             box-shadow: var(--neon-glow);
+            background: #cc0000;
         }
         
-        #card-type-selector:focus, #trainer-subtype-selector:focus {
+        #card-type-selector:focus, #trainer-subtype-selector:focus, #pokemon-type-selector:focus, #pokemon-stage-selector:focus {
             outline: none;
             border-color: var(--pokemon-blue);
             box-shadow: var(--neon-glow);
+        }
+        
+        /* Style for select options */
+        #card-type-selector option, #trainer-subtype-selector option, #pokemon-type-selector option, #pokemon-stage-selector option {
+            background: #ff0000;
+            color: #8a2be2;
+            font-weight: bold;
         }
         
         #search-input {
