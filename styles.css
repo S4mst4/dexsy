@@ -148,7 +148,7 @@
             align-items: center;
         }
         
-        #card-type-selector, #trainer-subtype-selector, #pokemon-type-selector, #pokemon-stage-selector {
+        #card-type-selector, #trainer-subtype-selector, #pokemon-type-selector, #pokemon-stage-selector, #price-sort-selector {
             padding: 10px 15px;
             background: #ff0000;
             color: #8a2be2;
@@ -162,20 +162,20 @@
             font-weight: bold;
         }
         
-        #card-type-selector:hover, #trainer-subtype-selector:hover, #pokemon-type-selector:hover, #pokemon-stage-selector:hover {
+        #card-type-selector:hover, #trainer-subtype-selector:hover, #pokemon-type-selector:hover, #pokemon-stage-selector:hover, #price-sort-selector:hover {
             border-color: var(--pokemon-blue);
             box-shadow: var(--neon-glow);
             background: #cc0000;
         }
         
-        #card-type-selector:focus, #trainer-subtype-selector:focus, #pokemon-type-selector:focus, #pokemon-stage-selector:focus {
+        #card-type-selector:focus, #trainer-subtype-selector:focus, #pokemon-type-selector:focus, #pokemon-stage-selector:focus, #price-sort-selector:focus {
             outline: none;
             border-color: var(--pokemon-blue);
             box-shadow: var(--neon-glow);
         }
         
         /* Style for select options */
-        #card-type-selector option, #trainer-subtype-selector option, #pokemon-type-selector option, #pokemon-stage-selector option {
+        #card-type-selector option, #trainer-subtype-selector option, #pokemon-type-selector option, #pokemon-stage-selector option, #price-sort-selector option {
             background: #ff0000;
             color: #8a2be2;
             font-weight: bold;
@@ -1130,4 +1130,68 @@
                 margin-bottom: 5px;
                 text-align: center;
             }
+        }
+        
+        #price-sort-selector {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, rgba(0, 105, 148, 0.2), rgba(0, 140, 186, 0.2));
+            color: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(0, 105, 148, 0.3);
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            min-width: 120px;
+            font-weight: bold;
+            box-shadow: 
+                0 0 15px rgba(0, 105, 148, 0.2),
+                inset 0 0 10px rgba(255, 255, 255, 0.2);
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #price-sort-selector::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.5s ease;
+            pointer-events: none;
+        }
+        
+        #price-sort-selector:hover {
+            border-color: rgba(0, 105, 148, 0.5);
+            box-shadow: 
+                0 0 20px rgba(0, 105, 148, 0.4),
+                inset 0 0 15px rgba(255, 255, 255, 0.3);
+            background: linear-gradient(135deg, rgba(0, 105, 148, 0.3), rgba(0, 140, 186, 0.3));
+            transform: translateY(-2px);
+        }
+        
+        #price-sort-selector:hover::before {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        #price-sort-selector:focus {
+            outline: none;
+            border-color: rgba(0, 105, 148, 0.5);
+            box-shadow: 
+                0 0 25px rgba(0, 105, 148, 0.5),
+                inset 0 0 20px rgba(255, 255, 255, 0.4);
+            background: linear-gradient(135deg, rgba(0, 105, 148, 0.4), rgba(0, 140, 186, 0.4));
+        }
+        
+        /* Style for price sort select options */
+        #price-sort-selector option {
+            background: linear-gradient(135deg, rgba(0, 105, 148, 0.3), rgba(0, 140, 186, 0.3));
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: bold;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
         } 

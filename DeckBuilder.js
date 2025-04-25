@@ -21,6 +21,7 @@ class DeckBuilder {
         this.isLoading = false;
         this.hasMoreResults = true;
         this.lastSearchQuery = '';
+        this.lastPriceSort = '';
         
         // Add initial search for Base Set
         this.initialBaseSetSearch();
@@ -50,6 +51,7 @@ class DeckBuilder {
         this.trainerSubtypeSelector = document.getElementById('trainer-subtype-selector');
         this.pokemonTypeSelector = document.getElementById('pokemon-type-selector');
         this.pokemonStageSelector = document.getElementById('pokemon-stage-selector');
+        this.priceSortSelector = document.getElementById('price-sort-selector');
     }
 
     setupEventListeners() {
@@ -67,6 +69,13 @@ class DeckBuilder {
             this.trainerSubtypeSelector.style.display = selectedType === 'trainer' ? 'block' : 'none';
             this.pokemonTypeSelector.style.display = selectedType === 'pokemon' ? 'block' : 'none';
             this.pokemonStageSelector.style.display = selectedType === 'pokemon' ? 'block' : 'none';
+        });
+        
+        // Add price sort selector change listener
+        this.priceSortSelector.addEventListener('change', () => {
+            if (this.searchResults.children.length > 0) {
+                this.sortAndDisplayResults();
+            }
         });
         
         // Add undo button listener
@@ -220,6 +229,7 @@ class DeckBuilder {
         this.currentPage = 1;
         this.hasMoreResults = true;
         this.lastSearchQuery = query;
+        this.lastPriceSort = this.priceSortSelector.value;
         this.searchResults.innerHTML = '';
         
         // Add loading indicator
@@ -273,114 +283,118 @@ class DeckBuilder {
         }
     }
 
-    displaySearchResults(cards, append = false) {
-        // Remove any existing loading indicator before adding new cards
-        const existingLoadingIndicator = this.searchResults.querySelector('.loading-indicator');
-        if (existingLoadingIndicator) {
-            existingLoadingIndicator.remove();
+    sortAndDisplayResults() {
+        const cards = Array.from(this.searchResults.children)
+            .filter(el => el.classList.contains('card'))
+            .map(cardEl => ({
+                element: cardEl,
+                price: parseFloat(cardEl.dataset.price) || 0
+            }));
+
+        const sortOrder = this.priceSortSelector.value;
+        if (sortOrder === 'low') {
+            cards.sort((a, b) => a.price - b.price);
+        } else if (sortOrder === 'high') {
+            cards.sort((a, b) => b.price - a.price);
         }
 
+        // Clear and re-add cards in sorted order
+        const nonCardElements = Array.from(this.searchResults.children)
+            .filter(el => !el.classList.contains('card'));
+        
+        this.searchResults.innerHTML = '';
+        nonCardElements.forEach(el => this.searchResults.appendChild(el));
+        cards.forEach(({ element }) => this.searchResults.appendChild(element));
+    }
+
+    displaySearchResults(cards, append = false) {
         if (!append) {
             this.searchResults.innerHTML = '';
         }
 
         cards.forEach(card => {
-            const cardElement = document.createElement('div');
-            cardElement.className = 'card';
-            
-            // Create image element with card back as placeholder
-            const img = document.createElement('img');
-            img.src = this.cardBackUrl;  // Show card back while loading
-            img.alt = card.name;
-
-            // Load the actual card image
-            const actualImage = new Image();
-            actualImage.onload = () => {
-                img.src = actualImage.src;
-            };
-            actualImage.src = card.images.small;
-
-            // Get price and rarity data
-            const priceData = this.getCardPriceData(card);
-            
-            // Add price information
-            let priceHTML = '';
-            if (priceData.price) {
-                priceHTML = `
-                    <div class="price-badge">
-                        <span class="price-value">$${priceData.price.toFixed(2)}</span>
-                    </div>
-                `;
-            }
-
-            // Check if card is in deck
-            const isInDeck = this.deck.some(c => 
-                c.name === card.name && 
-                c.number === card.number && 
-                c.set.id === card.set.id
-            );
-
-            // Count how many of this card are in the deck
-            const cardCount = isInDeck ? this.deck.filter(c => 
-                c.name === card.name && 
-                c.number === card.number && 
-                c.set.id === card.set.id
-            ).length : 0;
-
-            // Add buttons for adding to deck, status indicator, and TCGPlayer
-            const buttonsHTML = `
-                <div class="card-buttons">
-                    <div class="status-box ${isInDeck ? 'in-deck' : 'not-in-deck'}">
-                        ${isInDeck ? '✔' : '❌'}
-                        ${isInDeck ? `<span class="card-count-indicator">${cardCount}</span>` : ''}
-                    </div>
-                    <button class="card-button" title="Add to deck">➕</button>
-                    <button class="card-button tcgplayer-button" title="View on TCGPlayer">💰</button>
-                </div>
-                ${priceHTML}
-            `;
-            
-            cardElement.innerHTML = buttonsHTML;
-            cardElement.insertBefore(img, cardElement.firstChild);
-
-            // Add click handler for card zoom
-            cardElement.addEventListener('click', (e) => {
-                if (!e.target.classList.contains('card-button')) {
-                    this.showCardModal(card.images.large || card.images.small);
-                }
-            });
-
-            // Add click handler for add button
-            const addButton = cardElement.querySelector('.card-button:not(.tcgplayer-button)');
-            addButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.addCardToDeck(card);
-                
-                // Update status box after adding card
-                const statusBox = cardElement.querySelector('.status-box');
-                statusBox.classList.remove('not-in-deck');
-                statusBox.classList.add('in-deck');
-                
-                // Count cards after adding
-                const cardCount = this.deck.filter(c => 
-                    c.name === card.name && 
-                    c.number === card.number && 
-                    c.set.id === card.set.id
-                ).length;
-                
-                // Update status box with checkmark and count
-                statusBox.innerHTML = `✔<span class="card-count-indicator">${cardCount}</span>`;
-            });
-
-            // Add click handler for TCGPlayer button
-            const tcgPlayerButton = cardElement.querySelector('.tcgplayer-button');
-            tcgPlayerButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.openTCGPlayer(card);
-            });
-
+            const cardElement = this.createCardElement(card);
             this.searchResults.appendChild(cardElement);
         });
+
+        // Sort results if price sort is active
+        if (this.priceSortSelector.value) {
+            this.sortAndDisplayResults();
+        }
+    }
+
+    createCardElement(card) {
+        const cardElement = document.createElement('div');
+        cardElement.className = 'card';
+        
+        // Get price data
+        const priceData = this.getCardPriceData(card);
+        const price = priceData.price || 0;
+        cardElement.dataset.price = price;
+        
+        // Create image element with card back as placeholder
+        const img = document.createElement('img');
+        img.src = card.images.small;
+        img.alt = card.name;
+
+        // Add count badge
+        const countBadge = document.createElement('div');
+        countBadge.className = 'card-count';
+        countBadge.textContent = '×1';
+
+        // Add price information
+        let priceHTML = '';
+        if (priceData.price) {
+            priceHTML = `
+                <div class="price-badge">
+                    <span class="price-value">$${priceData.price.toFixed(2)}</span>
+                </div>
+            `;
+        }
+
+        // Add buttons for quantity control and TCGPlayer
+        const buttonsHTML = `
+            <div class="card-buttons">
+                <button class="card-button decrease-button" title="Decrease quantity">➖</button>
+                <button class="card-button increase-button" title="Increase quantity">➕</button>
+                <button class="card-button tcgplayer-button" title="View on TCGPlayer">💰</button>
+            </div>
+            ${priceHTML}
+        `;
+
+        cardElement.innerHTML = buttonsHTML;
+        cardElement.insertBefore(img, cardElement.firstChild);
+        cardElement.appendChild(countBadge);
+
+        // Add click handler for card zoom
+        cardElement.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('card-button')) {
+                this.showCardModal(card.images.large || card.images.small);
+            }
+        });
+
+        // Add click handler for decrease button
+        const decreaseButton = cardElement.querySelector('.decrease-button');
+        decreaseButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.decreaseCardQuantity(card);
+        });
+
+        // Add click handler for increase button
+        const increaseButton = cardElement.querySelector('.increase-button');
+        increaseButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.increaseCardQuantity(card);
+        });
+
+        // Add click handler for TCGPlayer button
+        const tcgPlayerButton = cardElement.querySelector('.tcgplayer-button');
+        tcgPlayerButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.openTCGPlayer(card);
+        });
+
+        return cardElement;
     }
 
     addCardToDeck(card) {
@@ -538,74 +552,7 @@ class DeckBuilder {
 
         // Display cards in their original order
         sortedCards.forEach(([cardKey, { card }]) => {
-            const cardElement = document.createElement('div');
-            cardElement.className = 'card';
-
-            const img = document.createElement('img');
-            img.src = card.images.small;
-            img.alt = card.name;
-
-            // Add count badge
-            const count = cardCounts.get(cardKey);
-            const countBadge = document.createElement('div');
-            countBadge.className = 'card-count';
-            countBadge.textContent = `×${count}`;
-
-            // Get price and rarity data
-            const priceData = this.getCardPriceData(card);
-            
-            // Add price information
-            let priceHTML = '';
-            if (priceData.price) {
-                priceHTML = `
-                    <div class="price-badge">
-                        <span class="price-value">$${priceData.price.toFixed(2)}</span>
-                    </div>
-                `;
-            }
-
-            // Add buttons for quantity control and TCGPlayer
-            const buttonsHTML = `
-                <div class="card-buttons">
-                    <button class="card-button decrease-button" title="Decrease quantity">➖</button>
-                    <button class="card-button increase-button" title="Increase quantity">➕</button>
-                    <button class="card-button tcgplayer-button" title="View on TCGPlayer">💰</button>
-                </div>
-                ${priceHTML}
-            `;
-
-            cardElement.innerHTML = buttonsHTML;
-            cardElement.insertBefore(img, cardElement.firstChild);
-            cardElement.appendChild(countBadge);
-
-            // Add click handler for card zoom
-            cardElement.addEventListener('click', (e) => {
-                if (!e.target.classList.contains('card-button')) {
-                    this.showCardModal(card.images.large || card.images.small);
-                }
-            });
-
-            // Add click handler for decrease button
-            const decreaseButton = cardElement.querySelector('.decrease-button');
-            decreaseButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.decreaseCardQuantity(card);
-            });
-
-            // Add click handler for increase button
-            const increaseButton = cardElement.querySelector('.increase-button');
-            increaseButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.increaseCardQuantity(card);
-            });
-
-            // Add click handler for TCGPlayer button
-            const tcgPlayerButton = cardElement.querySelector('.tcgplayer-button');
-            tcgPlayerButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.openTCGPlayer(card);
-            });
-
+            const cardElement = this.createCardElement(card);
             this.deckDisplay.appendChild(cardElement);
         });
 
