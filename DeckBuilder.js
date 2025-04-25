@@ -376,8 +376,9 @@ class DeckBuilder {
 
         // Add click handler for card zoom
         cardElement.addEventListener('click', (e) => {
-            if (!e.target.classList.contains('card-button')) {
-                this.showCardModal(card.images.large || card.images.small);
+            // Ensure click isn't on a button
+            if (!e.target.closest('.card-button')) {
+                this.showCardModal(card); // Pass the whole card object
             }
         });
 
@@ -623,8 +624,127 @@ class DeckBuilder {
         });
     }
 
-    showCardModal(imageUrl) {
-        this.modalContent.innerHTML = `<img src="${imageUrl}" alt="Card preview">`;
+    // Helper to render energy cost symbols (replace with actual symbols/images later if needed)
+    renderEnergyCost(cost) {
+        if (!cost || cost.length === 0) return 'None';
+        
+        const typeColors = {
+            'Fire': '#F08030',
+            'Water': '#6890F0',
+            'Grass': '#78C850',
+            'Lightning': '#F8D030',
+            'Psychic': '#F85888',
+            'Fighting': '#C03028',
+            'Darkness': '#705848',
+            'Metal': '#B8B8D0',
+            'Fairy': '#EE99AC',
+            'Dragon': '#7038F8',
+            'Colorless': '#A8A878'
+        };
+        
+        return cost.map(type => {
+            const color = typeColors[type] || '#A8A878'; // Default to colorless if type not found
+            return `<span class="energy-symbol" style="background-color: ${color}">${type.charAt(0)}</span>`;
+        }).join('');
+    }
+
+    // Helper to render weaknesses/resistances
+    renderWeakRes(items) {
+        if (!items || items.length === 0) return 'None';
+        
+        const typeColors = {
+            'Fire': '#F08030',
+            'Water': '#6890F0',
+            'Grass': '#78C850',
+            'Lightning': '#F8D030',
+            'Psychic': '#F85888',
+            'Fighting': '#C03028',
+            'Darkness': '#705848',
+            'Metal': '#B8B8D0',
+            'Fairy': '#EE99AC',
+            'Dragon': '#7038F8',
+            'Colorless': '#A8A878'
+        };
+        
+        return items.map(item => {
+            const color = typeColors[item.type] || '#A8A878'; // Default to colorless if type not found
+            return `<span class="energy-symbol" style="background-color: ${color}">${item.type.charAt(0)}</span> ${item.value}`;
+        }).join(', ');
+    }
+
+    showCardModal(card) {
+        // Clear previous content
+        this.modalContent.innerHTML = '';
+
+        // Create main container for modal content
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'card-modal-content';
+
+        // Card Image
+        const img = document.createElement('img');
+        img.src = card.images.large || card.images.small;
+        img.alt = card.name;
+        img.className = 'modal-card-image';
+        modalDiv.appendChild(img);
+
+        // Details Container
+        const detailsDiv = document.createElement('div');
+        detailsDiv.className = 'modal-card-details';
+
+        // Basic Info
+        detailsDiv.innerHTML += `<h2>${card.name} ${card.hp ? '<span class="hp">HP ' + card.hp + '</span>' : ''}</h2>`;
+        detailsDiv.innerHTML += `<p><strong>Set:</strong> ${card.set.name} #${card.number}</p>`;
+        if (card.rarity) {
+          detailsDiv.innerHTML += `<p><strong>Rarity:</strong> ${card.rarity}</p>`;
+        }
+
+        // Attacks (if Pokémon)
+        if (card.attacks && card.attacks.length > 0) {
+            detailsDiv.innerHTML += `<h3>Attacks</h3>`;
+            card.attacks.forEach(attack => {
+                detailsDiv.innerHTML += `
+                    <div class="attack-detail">
+                        <p><strong>${attack.name}</strong> ${this.renderEnergyCost(attack.cost)} ${attack.damage ? '<span class="damage">' + attack.damage + '</span>' : ''}</p>
+                        ${attack.text ? '<p class="attack-text">' + attack.text + '</p>' : ''}
+                    </div>
+                `;
+            });
+        }
+        
+        // Abilities (if any)
+        if (card.abilities && card.abilities.length > 0) {
+            detailsDiv.innerHTML += `<h3>Abilities</h3>`;
+            card.abilities.forEach(ability => {
+                detailsDiv.innerHTML += `
+                    <div class="ability-detail">
+                        <p><strong>${ability.name}</strong> (${ability.type})</p>
+                        <p class="ability-text">${ability.text}</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Rules (if any)
+        if (card.rules && card.rules.length > 0) {
+            detailsDiv.innerHTML += `<h3>Rules</h3>`;
+            card.rules.forEach(rule => {
+                 detailsDiv.innerHTML += `<p class="rule-text">${rule}</p>`;
+            });
+        }
+
+        // Weakness, Resistance, Retreat Cost (if Pokémon)
+        if (card.supertype?.toLowerCase() === 'pokemon') {
+             detailsDiv.innerHTML += `<div class="stats-grid pokemon-stats">
+                <p><strong>Weakness:</strong> ${this.renderWeakRes(card.weaknesses)}</p>
+                <p><strong>Resistance:</strong> ${this.renderWeakRes(card.resistances)}</p>
+                <p><strong>Retreat Cost:</strong> ${this.renderEnergyCost(card.retreatCost)}</p>
+             </div>`;
+        }
+
+        modalDiv.appendChild(detailsDiv);
+        this.modalContent.appendChild(modalDiv);
+
+        // Show the modal
         this.modalOverlay.classList.add('active');
     }
 
