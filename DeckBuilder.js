@@ -2,6 +2,7 @@ class DeckBuilder {
     constructor() {
         this.deck = [];
         this.removedCards = [];  // Track removed cards for undo
+        this.showPrices = true; // Initialize price visibility state
         this.initializeElements();
         this.setupEventListeners();
         
@@ -52,6 +53,7 @@ class DeckBuilder {
         this.pokemonTypeSelector = document.getElementById('pokemon-type-selector');
         this.pokemonStageSelector = document.getElementById('pokemon-stage-selector');
         this.priceSortSelector = document.getElementById('price-sort-selector');
+        this.priceToggle = document.getElementById('price-toggle'); // Get the toggle switch
     }
 
     setupEventListeners() {
@@ -101,6 +103,12 @@ class DeckBuilder {
         if (sortBtn) {
             sortBtn.addEventListener('click', () => this.sortDeck());
         }
+
+        // Add listener for the price toggle switch
+        this.priceToggle.addEventListener('change', () => {
+            this.showPrices = this.priceToggle.checked;
+            this.updatePriceVisibility(); // Update visibility when toggled
+        });
     }
 
     // Add new method to build search query
@@ -323,7 +331,7 @@ class DeckBuilder {
         }
     }
 
-    createCardElement(card) {
+    createCardElement(card, count = 1) {
         const cardElement = document.createElement('div');
         cardElement.className = 'card';
         
@@ -340,7 +348,7 @@ class DeckBuilder {
         // Add count badge
         const countBadge = document.createElement('div');
         countBadge.className = 'card-count';
-        countBadge.textContent = '×1';
+        countBadge.textContent = `×${count}`;
 
         // Add price information
         let priceHTML = '';
@@ -552,11 +560,13 @@ class DeckBuilder {
 
         // Display cards in their original order
         sortedCards.forEach(([cardKey, { card }]) => {
-            const cardElement = this.createCardElement(card);
+            const count = cardCounts.get(cardKey);
+            const cardElement = this.createCardElement(card, count);
             this.deckDisplay.appendChild(cardElement);
         });
 
         this.updateSortButtonVisibility();
+        this.updatePriceVisibility(); // Ensure prices are shown/hidden correctly on initial load/update
     }
 
     updateCounters() {
@@ -878,10 +888,30 @@ class DeckBuilder {
 
     // Add new method for initial Base Set search
     initialBaseSetSearch() {
-        // Set the search input value to "#base1"
-        this.searchInput.value = "#base1";
-        // Trigger the search
-        this.searchCards();
+        // Fetch sets from the Pokémon TCG API
+        fetch('https://api.pokemontcg.io/v2/sets')
+            .then(response => response.json())
+            .then(data => {
+                // Sort sets by release date (newest first)
+                const sortedSets = data.data.sort((a, b) => 
+                    new Date(b.releaseDate) - new Date(a.releaseDate)
+                );
+                
+                // Get the newest set
+                const newestSet = sortedSets[0];
+                
+                // Set the search input value to the newest set's ID
+                this.searchInput.value = `#${newestSet.id}`;
+                
+                // Trigger the search
+                this.searchCards();
+            })
+            .catch(error => {
+                console.error('Error fetching newest set:', error);
+                // Fallback to Base Set if there's an error
+                this.searchInput.value = "#base1";
+                this.searchCards();
+            });
     }
 
     // Add new method for sorting the deck
@@ -1017,6 +1047,17 @@ class DeckBuilder {
             statusBox.classList.remove('in-deck');
             statusBox.classList.add('not-in-deck');
             statusBox.innerHTML = '❌';
+        });
+    }
+
+    // New method to toggle price visibility in the deck display
+    updatePriceVisibility() {
+        const cardElements = this.deckDisplay.querySelectorAll('.card');
+        cardElements.forEach(cardElement => {
+            const priceBadge = cardElement.querySelector('.price-badge');
+            if (priceBadge) {
+                priceBadge.style.display = this.showPrices ? 'block' : 'none';
+            }
         });
     }
 }
