@@ -29,6 +29,9 @@ class DeckBuilder {
 
         // Initialize sort button visibility
         this.updateSortButtonVisibility();
+
+        this.multiDecks = [];
+        this.initializeMultiDeckUpload();
     }
 
     initializeElements() {
@@ -1179,6 +1182,201 @@ class DeckBuilder {
                 priceBadge.style.display = this.showPrices ? 'block' : 'none';
             }
         });
+    }
+
+    initializeMultiDeckUpload() {
+        this.multiDeckUploadInput = document.getElementById('multi-deck-upload');
+        this.multiDeckList = document.getElementById('multi-deck-list');
+        this.multiDeckTotalPrice = document.getElementById('multi-deck-total-price');
+        if (!this.multiDeckUploadInput) return;
+
+        this.multiDeckUploadInput.addEventListener('change', (event) => {
+            const files = Array.from(event.target.files);
+            // Instead of replacing, add to the list
+            let loadedCount = 0;
+            let totalFiles = files.length;
+            let errorMessages = [];
+
+            if (files.length === 0) {
+                this.renderMultiDeckList();
+                return;
+            }
+
+            // Track existing names to avoid duplicates
+            const existingNames = new Set(this.multiDecks.map(d => d.name));
+            files.forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const deck = JSON.parse(e.target.result);
+                        if (!Array.isArray(deck)) {
+                            throw new Error('Invalid deck format');
+                        }
+                        // Calculate price
+                        const price = deck.reduce((sum, card) => {
+                            const priceData = this.getCardPriceData(card);
+                            return sum + (priceData.price || 0);
+                        }, 0);
+                        // Ensure unique name
+                        let name = file.name;
+                        let suffix = 2;
+                        while (existingNames.has(name)) {
+                            name = file.name.replace(/(\.json)?$/, ` (${suffix})$1`);
+                            suffix++;
+                        }
+                        existingNames.add(name);
+                        this.multiDecks.push({
+                            name: name,
+                            cards: deck,
+                            price: price
+                        });
+                    } catch (err) {
+                        errorMessages.push(`${file.name}: Invalid file format`);
+                    } finally {
+                        loadedCount++;
+                        if (loadedCount === totalFiles) {
+                            this.renderMultiDeckList(errorMessages);
+                        }
+                    }
+                };
+                reader.readAsText(file);
+            });
+            // Clear the file input so the same file can be uploaded again if needed
+            this.multiDeckUploadInput.value = '';
+        });
+    }
+
+    renderMultiDeckList(errorMessages = []) {
+        // Render the list of uploaded decks and their prices
+        if (!this.multiDeckList || !this.multiDeckTotalPrice) return;
+        let html = '';
+        let totalPrice = 0;
+        if (this.multiDecks.length > 0) {
+            html += '<div class="multi-deck-list-grid">';
+            this.multiDecks.forEach((deck, idx) => {
+                html += `<div class="multi-deck-box" data-deck-idx="${idx}">`;
+                // Card preview (main card)
+                const mainCardIdx = deck.mainCardIdx || 0;
+                if (deck.cards && deck.cards.length > 0) {
+                    html += this.createDeckPreviewHTML(deck.cards[mainCardIdx], false);
+                } else {
+                    html += '<div class="deck-card-preview empty">No cards</div>';
+                }
+                html += `<div class="deck-info"><strong>${deck.name}</strong><br>$${deck.price.toFixed(2)}`;
+                if (deck.cards && deck.cards.length > 0) {
+                    html += `<div class="main-card-name">${deck.cards[mainCardIdx].name}</div>`;
+                }
+                html += `</div>`;
+                html += `</div>`;
+                totalPrice += deck.price;
+            });
+            html += '</div>';
+        } else {
+            html = '<em>No decks uploaded yet.</em>';
+        }
+        if (errorMessages.length > 0) {
+            html += '<div style="color:red;margin-top:8px;">' + errorMessages.join('<br>') + '</div>';
+        }
+        this.multiDeckList.innerHTML = html;
+        this.multiDeckTotalPrice.textContent = `$${totalPrice.toFixed(2)}`;
+
+        // Add hover and keydown logic for main card selection
+        this.setupDeckBoxHoverAndKey();
+    }
+
+    setupDeckBoxHoverAndKey() {
+        // Track which deck box is hovered
+        this._hoveredDeckIdx = null;
+        const deckBoxes = this.multiDeckList.querySelectorAll('.multi-deck-box');
+        deckBoxes.forEach(box => {
+            box.addEventListener('mouseenter', () => {
+                this._hoveredDeckIdx = parseInt(box.getAttribute('data-deck-idx'));
+            });
+            box.addEventListener('mouseleave', () => {
+                this._hoveredDeckIdx = null;
+            });
+        });
+        if (!this._deckKeyListener) {
+            this._deckKeyListener = (e) => {
+                if (e.key.toLowerCase() === 'i' && this._hoveredDeckIdx !== null) {
+                    this.promptChooseMainCard(this._hoveredDeckIdx);
+                }
+            };
+            document.addEventListener('keydown', this._deckKeyListener);
+        }
+    }
+
+    promptChooseMainCard(deckIdx) {
+        const deck = this.multiDecks[deckIdx];
+        if (!deck || !deck.cards || deck.cards.length === 0) return;
+        // Create a modal overlay for card selection
+        let modal = document.getElementById('main-card-select-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'main-card-select-modal';
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100vw';
+            modal.style.height = '100vh';
+            modal.style.background = 'rgba(0,0,0,0.7)';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            modal.style.zIndex = '9999';
+            modal.innerHTML = '';
+            document.body.appendChild(modal);
+        }
+        // Build card selection grid
+        let grid = document.createElement('div');
+        grid.style.background = 'white';
+        grid.style.borderRadius = '18px';
+        grid.style.padding = '24px';
+        grid.style.maxWidth = '90vw';
+        grid.style.maxHeight = '80vh';
+        grid.style.overflowY = 'auto';
+        grid.style.display = 'grid';
+        grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(110px, 1fr))';
+        grid.style.gap = '18px';
+        grid.innerHTML = `<h2 style='grid-column:1/-1;text-align:center;margin-bottom:18px;'>Choose Main Card for <span style='color:#2a3899;'>${deck.name}</span></h2>`;
+        deck.cards.forEach((card, idx) => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'deck-card-preview';
+            cardDiv.style.cursor = 'pointer';
+            cardDiv.innerHTML = `<img src="${card.images && card.images.small ? card.images.small : ''}" alt="${card.name}"><div class="deck-card-name">${card.name}</div>`;
+            cardDiv.addEventListener('click', () => {
+                deck.mainCardIdx = idx;
+                modal.remove();
+                this.renderMultiDeckList();
+            });
+            grid.appendChild(cardDiv);
+        });
+        // Add cancel button
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.style.margin = '24px auto 0 auto';
+        cancelBtn.style.display = 'block';
+        cancelBtn.style.padding = '10px 24px';
+        cancelBtn.style.fontSize = '1rem';
+        cancelBtn.style.borderRadius = '8px';
+        cancelBtn.style.background = '#eee';
+        cancelBtn.style.border = '1px solid #aaa';
+        cancelBtn.style.cursor = 'pointer';
+        cancelBtn.addEventListener('click', () => modal.remove());
+        grid.appendChild(cancelBtn);
+        modal.innerHTML = '';
+        modal.appendChild(grid);
+    }
+
+    createDeckPreviewHTML(card, showName = true) {
+        // Render a simple card preview box for the main card
+        if (!card || !card.images || !card.images.small) return '<div class="deck-card-preview empty">No image</div>';
+        return `
+            <div class="deck-card-preview" title="${card.name}">
+                <img src="${card.images.small}" alt="${card.name}">
+                ${showName ? `<div class=\"deck-card-name\">${card.name}</div>` : ''}
+            </div>
+        `;
     }
 }
 

@@ -119,6 +119,18 @@
             <!-- Search results will be displayed here -->
         </div>
 
+        <!-- Multi-deck upload and price summary section -->
+        <div id="multi-deck-upload-section" class="multi-deck-upload-section">
+            <h3>Upload and Manage Multiple Decks</h3>
+            <p style="margin:0 0 8px 0;font-size:0.98rem;color:#555;">You can upload several decks at once. Each deck will appear below, showing its main card and price. Hover over a deck and press <b>I</b> to choose its main card. The total price of all decks is shown below.</p>
+            <input type="file" id="multi-deck-upload" accept=".json" multiple>
+            <div id="multi-deck-price-summary">
+                <span>Total Price of All Decks: </span>
+                <span id="multi-deck-total-price">$0.00</span>
+            </div>
+            <div id="multi-deck-list"></div>
+        </div>
+
         <div class="disclaimer">
             Dexsy was built with ❤️ by a fan like you. We are not affiliated with, endorsed, sponsored, or specifically approved by Nintendo, The Pokémon™ Company, or any of their affiliates.
         </div>

@@ -1449,4 +1449,178 @@
         /* Override text color for energy symbols in stats section */
         .pokemon-stats .energy-symbol {
             margin-top: -2px;
+        }
+        
+        /* Multi-deck upload section styles */
+        .multi-deck-upload-section {
+            margin-top: 30px;
+            background: var(--glass-bg);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: var(--glass-shadow), var(--neon-border);
+            border: 2px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .multi-deck-upload-section h3 {
+            margin: 0 0 10px 0;
+            color: var(--pokemon-blue);
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        #multi-deck-upload {
+            padding: 10px 0;
+            font-size: 1rem;
+            color: var(--text-color);
+            background: transparent;
+            border: none;
+        }
+        
+        #multi-deck-price-summary {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--pokemon-yellow);
+            background: rgba(0,0,0,0.1);
+            padding: 8px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+        }
+        
+        #multi-deck-list {
+            width: 100%;
+            margin-top: 8px;
+            color: var(--text-color);
+        }
+        
+        #multi-deck-list ul {
+            margin: 0;
+            padding: 0;
+        }
+        
+        #multi-deck-list li {
+            margin-bottom: 4px;
+            font-size: 1rem;
+            background: rgba(255,255,255,0.07);
+            border-radius: 8px;
+            padding: 6px 12px;
+            border: 1px solid var(--glass-border);
+            color: var(--pokemon-blue);
+        }
+        
+        #multi-deck-list em {
+            color: #aaa;
+        }
+        
+        #multi-deck-list div[style*='color:red'] {
+            margin-top: 8px;
+            font-size: 0.95rem;
+            color: #e53935;
+            background: rgba(255,0,0,0.07);
+            border-radius: 6px;
+            padding: 6px 10px;
+            border: 1px solid #e53935;
+        }
+        
+        .multi-deck-list-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 18px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .multi-deck-box {
+            background: var(--glass-bg);
+            border-radius: 16px;
+            box-shadow: var(--glass-shadow), var(--neon-border);
+            border: 2px solid var(--glass-border);
+            padding: 14px 10px 10px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 220px;
+            transition: box-shadow 0.2s;
+        }
+        
+        .multi-deck-box:hover {
+            box-shadow: var(--neon-glow);
+        }
+        
+        .deck-card-preview {
+            width: 110px;
+            height: 150px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            overflow: hidden;
+            border: 1.5px solid var(--glass-border);
+            position: relative;
+        }
+        
+        .deck-card-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+        }
+        
+        .deck-card-preview.empty {
+            background: #eee;
+            color: #888;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+        }
+        
+        .deck-card-name {
+            margin-top: 4px;
+            font-size: 0.98rem;
+            color: var(--pokemon-blue);
+            font-weight: bold;
+            text-align: center;
+            word-break: break-word;
+            background: rgba(255,255,255,0.5);
+            border-radius: 6px;
+            padding: 2px 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            max-width: 100px;
+            position: absolute;
+            left: 50%;
+            bottom: 6px;
+            transform: translateX(-50%);
+        }
+        
+        .deck-info {
+            margin-top: 8px;
+            text-align: center;
+            font-size: 1rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+        
+        .main-card-name {
+            margin-top: 6px;
+            font-size: 0.98rem;
+            color: var(--pokemon-blue);
+            font-weight: bold;
+            text-align: center;
+            word-break: break-word;
+            background: rgba(255,255,255,0.5);
+            border-radius: 6px;
+            padding: 2px 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            display: inline-block;
+            max-width: 120px;
         } 
