@@ -182,7 +182,15 @@ class DeckBuilder {
         }
         // Default to searching by card name
         else {
-            searchQuery = `name:"*${query}*"`;
+            // If the query does NOT explicitly mention EX, GX, V, VSTAR, VMAX, or Mega, exclude them
+            const lowerQuery = query.toLowerCase();
+            const mentionsSpecial = /\b(ex|gx|vstar|vmax|mega| v)\b/.test(lowerQuery);
+            if (!mentionsSpecial) {
+                // Exclude EX, GX, V, VSTAR, VMAX, Mega
+                searchQuery = `name:"*${query}*" -name:"*EX" -name:"*GX" -name:"* V" -name:"*VSTAR" -name:"*VMAX" -name:"Mega*" -subtypes:"EX" -subtypes:"GX" -subtypes:"V" -subtypes:"VSTAR" -subtypes:"VMAX" -subtypes:"MEGA"`;
+            } else {
+                searchQuery = `name:"*${query}*"`;
+            }
         }
         
         // Add supertype filter if a type is selected
