@@ -31,6 +31,7 @@ class DeckBuilder {
         this.updateSortButtonVisibility();
 
         this.multiDecks = [];
+        this._editDeckMode = false; // Track if edit mode is active
         this.initializeMultiDeckUpload();
     }
 
@@ -1308,6 +1309,21 @@ class DeckBuilder {
             this._deckKeyListener = (e) => {
                 if (e.key.toLowerCase() === 'i' && this._hoveredDeckIdx !== null) {
                     this.promptChooseMainCard(this._hoveredDeckIdx);
+                } else if (e.key.toLowerCase() === 'e' && this._hoveredDeckIdx !== null) {
+                    // Prompt for confirmation to edit/switch deck, unless deck is empty or has only 1 card
+                    const deck = this.multiDecks[this._hoveredDeckIdx];
+                    if (!deck) return;
+                    if (this.deck.length === 0 || this.deck.length === 1) {
+                        this._editDeckMode = true;
+                        this.switchToUploadedDeck(this._hoveredDeckIdx);
+                    } else {
+                        const confirmed = window.confirm(`Are you sure you want to edit/switch to deck: ${deck.name}? This will replace your current deck.`);
+                        if (confirmed) {
+                            this._editDeckMode = true;
+                            this.switchToUploadedDeck(this._hoveredDeckIdx);
+                            // Optionally, show a notification or visual indicator for edit mode
+                        }
+                    }
                 }
             };
             document.addEventListener('keydown', this._deckKeyListener);
@@ -1385,6 +1401,19 @@ class DeckBuilder {
                 ${showName ? `<div class=\"deck-card-name\">${card.name}</div>` : ''}
             </div>
         `;
+    }
+
+    switchToUploadedDeck(deckIdx) {
+        const deck = this.multiDecks[deckIdx];
+        if (!deck || !deck.cards) return;
+        // Replace the main deck with the uploaded deck's cards
+        this.deck = deck.cards.map(card => ({ ...card })); // Deep copy to avoid reference issues
+        this.updateDeckDisplay();
+        this.updateCounters();
+        this.updateSortButtonVisibility();
+        this.resetAllCardStatus();
+        // Optionally, reset edit mode after switching, or keep it for further quick switching
+        // this._editDeckMode = false;
     }
 }
 
