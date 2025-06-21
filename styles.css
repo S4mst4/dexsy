@@ -1551,6 +1551,15 @@
             box-shadow: var(--neon-glow);
         }
         
+        .deck-cards-preview-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
         .deck-card-preview {
             width: 110px;
             height: 150px;
@@ -1565,6 +1574,14 @@
             overflow: hidden;
             border: 1.5px solid var(--glass-border);
             position: relative;
+        }
+        
+        .deck-card-preview.secondary {
+            width: 80px;
+            height: 110px;
+            margin-bottom: 0;
+            margin-left: 8px;
+            border: 1px solid var(--glass-border);
         }
         
         .deck-card-preview img {
@@ -1602,6 +1619,12 @@
             transform: translateX(-50%);
         }
         
+        .deck-card-preview.secondary .deck-card-name {
+            font-size: 0.7rem;
+            max-width: 70px;
+            padding: 1px 4px;
+        }
+        
         .deck-info {
             margin-top: 8px;
             text-align: center;
@@ -1623,4 +1646,16 @@
             box-shadow: 0 1px 2px rgba(0,0,0,0.04);
             display: inline-block;
             max-width: 120px;
+        }
+        
+        .main-card-count {
+            margin-top: 4px;
+            font-size: 0.8rem;
+            color: var(--pokemon-yellow);
+            font-weight: bold;
+            text-align: center;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            padding: 1px 6px;
+            display: inline-block;
         } 

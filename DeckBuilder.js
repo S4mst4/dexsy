@@ -1264,16 +1264,56 @@ class DeckBuilder {
             html += '<div class="multi-deck-list-grid">';
             this.multiDecks.forEach((deck, idx) => {
                 html += `<div class="multi-deck-box" data-deck-idx="${idx}">`;
-                // Card preview (main card)
-                const mainCardIdx = deck.mainCardIdx || 0;
+                
+                // Card preview section with multiple main cards
+                html += '<div class="deck-cards-preview-container">';
+                
                 if (deck.cards && deck.cards.length > 0) {
-                    html += this.createDeckPreviewHTML(deck.cards[mainCardIdx], false);
+                    // Check if we have multiple main cards
+                    if (deck.mainCards && deck.mainCards.length > 0) {
+                        // Display multiple main cards
+                        deck.mainCards.forEach((cardIdx, mainCardIndex) => {
+                            const card = deck.cards[cardIdx];
+                            const isMain = mainCardIndex === 0;
+                            
+                            if (isMain) {
+                                // Main card (larger)
+                                html += this.createDeckPreviewHTML(card, false);
+                            } else {
+                                // Secondary cards (smaller, positioned to the right)
+                                html += `<div class="deck-card-preview secondary" style="width: 80px; height: 110px; margin-left: 8px; margin-bottom: 0;">`;
+                                html += `<img src="${card.images && card.images.small ? card.images.small : ''}" alt="${card.name}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">`;
+                                html += `<div class="deck-card-name" style="font-size: 0.7rem; max-width: 70px;">${card.name}</div>`;
+                                html += `</div>`;
+                            }
+                        });
+                    } else {
+                        // Fallback to single main card (backward compatibility)
+                        const mainCardIdx = deck.mainCardIdx || 0;
+                        html += this.createDeckPreviewHTML(deck.cards[mainCardIdx], false);
+                    }
                 } else {
                     html += '<div class="deck-card-preview empty">No cards</div>';
                 }
+                
+                html += '</div>';
+                
+                // Deck info
                 html += `<div class="deck-info"><strong>${deck.name}</strong><br>$${deck.price.toFixed(2)}`;
                 if (deck.cards && deck.cards.length > 0) {
-                    html += `<div class="main-card-name">${deck.cards[mainCardIdx].name}</div>`;
+                    if (deck.mainCards && deck.mainCards.length > 0) {
+                        // Show main card name
+                        const mainCard = deck.cards[deck.mainCards[0]];
+                        html += `<div class="main-card-name">${mainCard.name}</div>`;
+                        // Show count of main cards if more than 1
+                        if (deck.mainCards.length > 1) {
+                            html += `<div class="main-card-count">+${deck.mainCards.length - 1} more</div>`;
+                        }
+                    } else {
+                        // Fallback to single main card
+                        const mainCardIdx = deck.mainCardIdx || 0;
+                        html += `<div class="main-card-name">${deck.cards[mainCardIdx].name}</div>`;
+                    }
                 }
                 html += `</div>`;
                 html += `</div>`;
@@ -1324,6 +1364,17 @@ class DeckBuilder {
                             // Optionally, show a notification or visual indicator for edit mode
                         }
                     }
+                } else if (e.key.toLowerCase() === 'r' && this._hoveredDeckIdx !== null) {
+                    // Remove deck from uploaded decks list
+                    const deck = this.multiDecks[this._hoveredDeckIdx];
+                    if (!deck) return;
+                    
+                    const confirmed = window.confirm(`Are you sure you want to remove deck: ${deck.name}?`);
+                    if (confirmed) {
+                        this.multiDecks.splice(this._hoveredDeckIdx, 1);
+                        this.renderMultiDeckList();
+                        this._hoveredDeckIdx = null;
+                    }
                 }
             };
             document.addEventListener('keydown', this._deckKeyListener);
@@ -1333,6 +1384,12 @@ class DeckBuilder {
     promptChooseMainCard(deckIdx) {
         const deck = this.multiDecks[deckIdx];
         if (!deck || !deck.cards || deck.cards.length === 0) return;
+        
+        // Initialize main cards array if it doesn't exist
+        if (!deck.mainCards) {
+            deck.mainCards = [deck.mainCardIdx || 0];
+        }
+        
         // Create a modal overlay for card selection
         let modal = document.getElementById('main-card-select-modal');
         if (!modal) {
@@ -1351,6 +1408,7 @@ class DeckBuilder {
             modal.innerHTML = '';
             document.body.appendChild(modal);
         }
+        
         // Build card selection grid
         let grid = document.createElement('div');
         grid.style.background = 'white';
@@ -1362,32 +1420,144 @@ class DeckBuilder {
         grid.style.display = 'grid';
         grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(110px, 1fr))';
         grid.style.gap = '18px';
-        grid.innerHTML = `<h2 style='grid-column:1/-1;text-align:center;margin-bottom:18px;'>Choose Main Card for <span style='color:#2a3899;'>${deck.name}</span></h2>`;
+        
+        // Create header with current main cards display
+        let headerHTML = `<h2 style='grid-column:1/-1;text-align:center;margin-bottom:18px;'>Choose Main Cards for <span style='color:#2a3899;'>${deck.name}</span></h2>`;
+        
+        // Show current main cards if any
+        if (deck.mainCards && deck.mainCards.length > 0) {
+            headerHTML += `<div style='grid-column:1/-1;display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:20px;'>`;
+            headerHTML += `<div style='text-align:center;'><strong>Current Main Cards:</strong></div>`;
+            
+            deck.mainCards.forEach((cardIdx, idx) => {
+                const card = deck.cards[cardIdx];
+                const isMain = idx === 0;
+                const cardSize = isMain ? '110px' : '80px';
+                const cardHeight = isMain ? '150px' : '110px';
+                
+                headerHTML += `
+                    <div style='display:flex;flex-direction:column;align-items:center;gap:5px;'>
+                        <div style='width:${cardSize};height:${cardHeight};background:rgba(255,255,255,0.08);border-radius:10px;border:2px solid ${isMain ? '#2a3899' : '#666'};overflow:hidden;position:relative;'>
+                            <img src="${card.images && card.images.small ? card.images.small : ''}" alt="${card.name}" style='width:100%;height:100%;object-fit:contain;'>
+                            <div style='position:absolute;bottom:5px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.9);padding:2px 6px;border-radius:4px;font-size:0.8rem;font-weight:bold;'>${isMain ? 'Main' : `#${idx + 1}`}</div>
+                        </div>
+                        <div style='font-size:0.8rem;color:#666;'>${card.name}</div>
+                    </div>
+                `;
+            });
+            headerHTML += `</div>`;
+        }
+        
+        headerHTML += `<div style='grid-column:1/-1;text-align:center;margin-bottom:15px;color:#666;font-size:0.9rem;'>Click a card to select it. You can have up to 3 main cards. The first card will be the main display, others will be smaller.</div>`;
+        
+        grid.innerHTML = headerHTML;
+        
+        // Add card selection grid
         deck.cards.forEach((card, idx) => {
             const cardDiv = document.createElement('div');
             cardDiv.className = 'deck-card-preview';
             cardDiv.style.cursor = 'pointer';
-            cardDiv.innerHTML = `<img src="${card.images && card.images.small ? card.images.small : ''}" alt="${card.name}"><div class="deck-card-name">${card.name}</div>`;
+            cardDiv.style.position = 'relative';
+            
+            // Check if this card is already selected
+            const isSelected = deck.mainCards && deck.mainCards.includes(idx);
+            const selectionIndex = deck.mainCards ? deck.mainCards.indexOf(idx) : -1;
+            
+            if (isSelected) {
+                cardDiv.style.border = '2px solid #2a3899';
+                cardDiv.style.background = 'rgba(42, 56, 153, 0.1)';
+            }
+            
+            cardDiv.innerHTML = `
+                <img src="${card.images && card.images.small ? card.images.small : ''}" alt="${card.name}">
+                <div class="deck-card-name">${card.name}</div>
+                ${isSelected ? `<div style='position:absolute;top:5px;right:5px;background:#2a3899;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:bold;'>${selectionIndex + 1}</div>` : ''}
+            `;
+            
             cardDiv.addEventListener('click', () => {
-                deck.mainCardIdx = idx;
+                if (!deck.mainCards) deck.mainCards = [];
+                
+                if (isSelected) {
+                    // Remove card from selection
+                    const removeIndex = deck.mainCards.indexOf(idx);
+                    deck.mainCards.splice(removeIndex, 1);
+                } else {
+                    // Add card to selection (max 3)
+                    if (deck.mainCards.length < 3) {
+                        deck.mainCards.push(idx);
+                    } else {
+                        alert('You can only select up to 3 main cards. Please remove one first.');
+                        return;
+                    }
+                }
+                
+                // Update the modal to reflect changes
                 modal.remove();
-                this.renderMultiDeckList();
+                this.promptChooseMainCard(deckIdx);
             });
+            
             grid.appendChild(cardDiv);
         });
-        // Add cancel button
+        
+        // Add action buttons
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.gridColumn = '1/-1';
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.justifyContent = 'center';
+        buttonContainer.style.gap = '15px';
+        buttonContainer.style.marginTop = '20px';
+        
+        // Clear selection button
+        const clearBtn = document.createElement('button');
+        clearBtn.textContent = 'Clear Selection';
+        clearBtn.style.padding = '10px 20px';
+        clearBtn.style.fontSize = '1rem';
+        clearBtn.style.borderRadius = '8px';
+        clearBtn.style.background = '#f44336';
+        clearBtn.style.color = 'white';
+        clearBtn.style.border = 'none';
+        clearBtn.style.cursor = 'pointer';
+        clearBtn.addEventListener('click', () => {
+            deck.mainCards = [];
+            modal.remove();
+            this.renderMultiDeckList();
+        });
+        
+        // Save button
+        const saveBtn = document.createElement('button');
+        saveBtn.textContent = 'Save Selection';
+        saveBtn.style.padding = '10px 20px';
+        saveBtn.style.fontSize = '1rem';
+        saveBtn.style.borderRadius = '8px';
+        saveBtn.style.background = '#4CAF50';
+        saveBtn.style.color = 'white';
+        saveBtn.style.border = 'none';
+        saveBtn.style.cursor = 'pointer';
+        saveBtn.addEventListener('click', () => {
+            // Update mainCardIdx to the first selected card for backward compatibility
+            if (deck.mainCards && deck.mainCards.length > 0) {
+                deck.mainCardIdx = deck.mainCards[0];
+            }
+            modal.remove();
+            this.renderMultiDeckList();
+        });
+        
+        // Cancel button
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = 'Cancel';
-        cancelBtn.style.margin = '24px auto 0 auto';
-        cancelBtn.style.display = 'block';
-        cancelBtn.style.padding = '10px 24px';
+        cancelBtn.style.padding = '10px 20px';
         cancelBtn.style.fontSize = '1rem';
         cancelBtn.style.borderRadius = '8px';
         cancelBtn.style.background = '#eee';
         cancelBtn.style.border = '1px solid #aaa';
         cancelBtn.style.cursor = 'pointer';
         cancelBtn.addEventListener('click', () => modal.remove());
-        grid.appendChild(cancelBtn);
+        
+        buttonContainer.appendChild(clearBtn);
+        buttonContainer.appendChild(saveBtn);
+        buttonContainer.appendChild(cancelBtn);
+        grid.appendChild(buttonContainer);
+        
         modal.innerHTML = '';
         modal.appendChild(grid);
     }
