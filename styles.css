@@ -1649,13 +1649,30 @@
         }
         
         .main-card-count {
-            margin-top: 4px;
-            font-size: 0.8rem;
-            color: var(--pokemon-yellow);
-            font-weight: bold;
-            text-align: center;
-            background: rgba(255,255,255,0.3);
-            border-radius: 4px;
-            padding: 1px 6px;
-            display: inline-block;
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* Export Modal Animations */
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes modalSlideOut {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
         } 

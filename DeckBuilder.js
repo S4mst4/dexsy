@@ -113,6 +113,10 @@ class DeckBuilder {
             this.showPrices = this.priceToggle.checked;
             this.updatePriceVisibility(); // Update visibility when toggled
         });
+
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            this.showExportModal();
+        });
     }
 
     // Add new method to build search query
@@ -783,17 +787,7 @@ class DeckBuilder {
         document.body.appendChild(importNotification);
 
         document.getElementById('exportBtn').addEventListener('click', () => {
-            const deckData = JSON.stringify(this.deck, null, 2);
-            const blob = new Blob([deckData], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'pokemon-deck.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            this.showExportModal();
         });
 
         document.getElementById('importBtn').addEventListener('click', () => {
@@ -823,20 +817,45 @@ class DeckBuilder {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
-                        const importedDeck = JSON.parse(e.target.result);
+                        const importedData = JSON.parse(e.target.result);
                         
-                        // Validate the imported data
-                        if (!Array.isArray(importedDeck)) {
+                        let cardsToImport = [];
+                        let deckName = 'Imported Deck';
+                        
+                        // Check if it's the new Swift-compatible format
+                        if (importedData.name && Array.isArray(importedData.cards)) {
+                            // Swift-compatible format: { name: string, cards: Card[] }
+                            cardsToImport = importedData.cards;
+                            deckName = importedData.name;
+                            
+                            // Convert Swift format back to internal format if needed
+                            cardsToImport = cardsToImport.map(card => {
+                                if (card.image_url && !card.images) {
+                                    // Convert Swift format to internal format
+                                    return {
+                                        ...card,
+                                        images: {
+                                            small: card.image_url,
+                                            large: card.image_url
+                                        }
+                                    };
+                                }
+                                return card;
+                            });
+                        } else if (Array.isArray(importedData)) {
+                            // Old format: Card[]
+                            cardsToImport = importedData;
+                        } else {
                             throw new Error('Invalid deck format');
                         }
                         
-                        this.deck = importedDeck;
+                        this.deck = cardsToImport;
                         this.updateDeckDisplay();
                         this.updateCounters();
                         this.updateSortButtonVisibility();
                         
                         // Show success notification
-                        showImportNotification(true, 'Deck imported successfully');
+                        showImportNotification(true, `Deck "${deckName}" imported successfully`);
                     } catch (error) {
                         // Show error notification
                         showImportNotification(false, 'Error importing deck: Invalid file format');
@@ -1327,7 +1346,11 @@ class DeckBuilder {
             html += '<div style="color:red;margin-top:8px;">' + errorMessages.join('<br>') + '</div>';
         }
         this.multiDeckList.innerHTML = html;
-        this.multiDeckTotalPrice.textContent = `$${totalPrice.toFixed(2)}`;
+        
+        // Update the price summary to include deck count
+        const deckCount = this.multiDecks.length;
+        const deckText = deckCount === 1 ? 'deck' : 'decks';
+        this.multiDeckTotalPrice.textContent = `$${totalPrice.toFixed(2)} (${deckCount} ${deckText})`;
 
         // Add hover and keydown logic for main card selection
         this.setupDeckBoxHoverAndKey();
@@ -1584,6 +1607,260 @@ class DeckBuilder {
         this.resetAllCardStatus();
         // Optionally, reset edit mode after switching, or keep it for further quick switching
         // this._editDeckMode = false;
+    }
+
+    showExportModal() {
+        // Create modal overlay
+        const modalOverlay = document.createElement('div');
+        modalOverlay.className = 'export-modal-overlay';
+        modalOverlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        `;
+
+        // Create modal content
+        const modalContent = document.createElement('div');
+        modalContent.className = 'export-modal-content';
+        modalContent.style.cssText = `
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        `;
+
+        modalContent.innerHTML = `
+            <div style="text-align: center; margin-bottom: 25px;">
+                <h2 style="margin: 0 0 10px 0; color: #333; font-size: 24px;">💾 Export Deck</h2>
+                <p style="margin: 0; color: #666; font-size: 16px;">Choose your export format</p>
+            </div>
+            
+            <div style="display: flex; gap: 15px; margin-bottom: 25px;">
+                <button id="qr-export-btn" style="
+                    flex: 1;
+                    padding: 20px;
+                    border: 2px solid #4CAF50;
+                    border-radius: 10px;
+                    background: #4CAF50;
+                    color: white;
+                    font-size: 16px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <span style="font-size: 24px;">📱</span>
+                    <div>
+                        <div style="font-weight: bold;">QR Data</div>
+                        <div style="font-size: 12px; opacity: 0.9;">Swift Compatible</div>
+                    </div>
+                </button>
+                
+                <button id="full-export-btn" style="
+                    flex: 1;
+                    padding: 20px;
+                    border: 2px solid #2196F3;
+                    border-radius: 10px;
+                    background: #2196F3;
+                    color: white;
+                    font-size: 16px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <span style="font-size: 24px;">📊</span>
+                    <div>
+                        <div style="font-weight: bold;">Full Data</div>
+                        <div style="font-size: 12px; opacity: 0.9;">Complete Info</div>
+                    </div>
+                </button>
+            </div>
+            
+            <div style="text-align: center;">
+                <button id="cancel-export-btn" style="
+                    padding: 12px 24px;
+                    border: 2px solid #ccc;
+                    border-radius: 8px;
+                    background: white;
+                    color: #666;
+                    font-size: 14px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                ">Cancel</button>
+            </div>
+        `;
+
+        modalOverlay.appendChild(modalContent);
+        document.body.appendChild(modalOverlay);
+
+        // Add hover effects
+        const qrBtn = modalOverlay.querySelector('#qr-export-btn');
+        const fullBtn = modalOverlay.querySelector('#full-export-btn');
+        const cancelBtn = modalOverlay.querySelector('#cancel-export-btn');
+
+        qrBtn.addEventListener('mouseenter', () => {
+            qrBtn.style.transform = 'translateY(-2px)';
+            qrBtn.style.boxShadow = '0 8px 20px rgba(76, 175, 80, 0.3)';
+        });
+        qrBtn.addEventListener('mouseleave', () => {
+            qrBtn.style.transform = 'translateY(0)';
+            qrBtn.style.boxShadow = 'none';
+        });
+
+        fullBtn.addEventListener('mouseenter', () => {
+            fullBtn.style.transform = 'translateY(-2px)';
+            fullBtn.style.boxShadow = '0 8px 20px rgba(33, 150, 243, 0.3)';
+        });
+        fullBtn.addEventListener('mouseleave', () => {
+            fullBtn.style.transform = 'translateY(0)';
+            fullBtn.style.boxShadow = 'none';
+        });
+
+        cancelBtn.addEventListener('mouseenter', () => {
+            cancelBtn.style.backgroundColor = '#f5f5f5';
+        });
+        cancelBtn.addEventListener('mouseleave', () => {
+            cancelBtn.style.backgroundColor = 'white';
+        });
+
+        // Add event listeners
+        qrBtn.addEventListener('click', () => {
+            this.exportQRData();
+            this.closeExportModal(modalOverlay);
+        });
+
+        fullBtn.addEventListener('click', () => {
+            this.exportFullData();
+            this.closeExportModal(modalOverlay);
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            this.closeExportModal(modalOverlay);
+        });
+
+        // Close modal when clicking outside
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                this.closeExportModal(modalOverlay);
+            }
+        });
+
+        // Close modal with Escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                this.closeExportModal(modalOverlay);
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+    }
+
+    closeExportModal(modalOverlay) {
+        modalOverlay.style.animation = 'modalSlideOut 0.3s ease-in';
+        setTimeout(() => {
+            document.body.removeChild(modalOverlay);
+        }, 300);
+    }
+
+    exportQRData() {
+        const deckName = prompt('Enter a name for your deck:', 'My Pokemon Deck') || 'My Pokemon Deck';
+        
+        // Convert deck to Swift-compatible format
+        const swiftCompatibleCards = this.deck.map((card, index) => ({
+            name: card.name,
+            image_url: card.images && card.images.small ? card.images.small : '',
+            qrCodeId: `card_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`
+        }));
+
+        const swiftCompatibleDeck = {
+            name: deckName,
+            cards: swiftCompatibleCards
+        };
+
+        const deckData = JSON.stringify(swiftCompatibleDeck, null, 2);
+        const blob = new Blob([deckData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${deckName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-qr-deck.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        // Show success notification
+        this.showImportNotification(true, `QR Data deck "${deckName}" exported successfully`);
+    }
+
+    exportFullData() {
+        const deckData = JSON.stringify(this.deck, null, 2);
+        const blob = new Blob([deckData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'pokemon-deck-full.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        // Show success notification
+        this.showImportNotification(true, 'Full Data deck exported successfully');
+    }
+
+    showImportNotification(success, message) {
+        // Find existing notification or create new one
+        let importNotification = document.querySelector('.import-notification');
+        if (!importNotification) {
+            importNotification = document.createElement('div');
+            importNotification.className = 'import-notification';
+            importNotification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 10px 15px;
+                border-radius: 5px;
+                font-weight: bold;
+                display: none;
+                z-index: 1000;
+                transition: opacity 0.5s ease-in-out;
+            `;
+            document.body.appendChild(importNotification);
+        }
+
+        importNotification.textContent = success ? '✓ ' + message : '✗ ' + message;
+        importNotification.style.backgroundColor = success ? '#4CAF50' : '#F44336';
+        importNotification.style.color = 'white';
+        importNotification.style.display = 'block';
+        importNotification.style.opacity = '1';
+        
+        // Hide the notification after 3 seconds
+        setTimeout(() => {
+            importNotification.style.opacity = '0';
+            setTimeout(() => {
+                importNotification.style.display = 'none';
+            }, 500);
+        }, 3000);
     }
 }
 
