@@ -1675,4 +1675,36 @@
                 opacity: 0;
                 transform: translateY(-50px) scale(0.9);
             }
+        }
+        
+        #tcg-type-filter {
+            padding: 10px 15px;
+            background: #ff0000;
+            color: #8a2be2;
+            border: 2px solid var(--glass-border);
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            min-width: 120px;
+            font-weight: bold;
+        }
+        
+        #tcg-type-filter:hover {
+            border-color: var(--pokemon-blue);
+            box-shadow: var(--neon-glow);
+            background: #cc0000;
+        }
+        
+        #tcg-type-filter:focus {
+            outline: none;
+            border-color: var(--pokemon-blue);
+            box-shadow: var(--neon-glow);
+        }
+        
+        #tcg-type-filter option {
+            background: #ff0000;
+            color: #8a2be2;
+            font-weight: bold;
         } 

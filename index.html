@@ -6,7 +6,7 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
-    <script src="DeckBuilder.js"></script>
+    <script type="module" src="js/main.js"></script>
     <title>Dexsy</title>
 </head>
 <body>
@@ -119,6 +119,20 @@
                 <option value="stadium">Stadium</option>
             </select>
             <input type="text" id="search-input" placeholder="🔍 Search for Pokémon™ cards...">
+            <select id="tcg-type-filter">
+                <option value="">All TCG Types</option>
+                <option value="Grass">Grass</option>
+                <option value="Fire">Fire</option>
+                <option value="Water">Water</option>
+                <option value="Lightning">Lightning</option>
+                <option value="Psychic">Psychic</option>
+                <option value="Fighting">Fighting</option>
+                <option value="Darkness">Darkness</option>
+                <option value="Metal">Metal</option>
+                <option value="Fairy">Fairy</option>
+                <option value="Dragon">Dragon</option>
+                <option value="Colorless">Colorless</option>
+            </select>
             <select id="price-sort-selector">
                 <option value="">Sort by Price</option>
                 <option value="low">Price: Low to High</option>
