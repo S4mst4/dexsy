@@ -1,0 +1,195 @@
+@import './variables.css';
+
+.deck-controls-container {
+    display: flex;
+    justify-content: space-between;
+    background: var(--glass-bg);
+    padding: 20px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--glass-shadow), var(--neon-border);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--glass-border);
+}
+
+.deck-stats {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    color: var(--text-color);
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+    border: 2px solid var(--glass-border);
+    flex-wrap: nowrap;
+    align-items: center;
+    box-shadow: var(--neon-border);
+}
+
+.stat {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    background: var(--glass-bg);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    font-size: 1.1rem;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+    border: 2px solid var(--glass-border);
+    min-width: 160px;
+    backdrop-filter: blur(5px);
+    box-shadow: var(--neon-border);
+}
+
+.stat:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: var(--neon-glow);
+}
+
+.stat i {
+    font-size: 1.4rem;
+    width: 30px;
+    text-align: center;
+    color: var(--pokemon-yellow);
+    text-shadow: 0 0 5px rgba(255, 222, 0, 0.5);
+}
+
+.stat span {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 1rem;
+    min-width: 30px;
+    text-align: center;
+    border: 1px solid var(--glass-border);
+}
+
+.button-container {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    align-items: center;
+    padding-left: 15px;
+    border-left: 2px solid var(--glass-border);
+}
+
+.button-container button {
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.2rem;
+    box-shadow: var(--glass-shadow), var(--neon-border);
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    backdrop-filter: blur(5px);
+    border: 2px solid var(--glass-border);
+}
+
+.button-container button:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--neon-glow);
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+}
+
+.button-container button::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--text-color);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.button-container button:hover::after {
+    opacity: 1;
+}
+
+.price-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.price-toggle-container .toggle-label {
+    color: var(--text-color);
+    font-weight: bold;
+    font-size: 0.9rem;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--pokemon-yellow);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--pokemon-yellow);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+} 

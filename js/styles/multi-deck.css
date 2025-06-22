@@ -1,0 +1,195 @@
+@import './variables.css';
+
+.multi-deck-upload-section {
+    background: var(--glass-bg);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 30px;
+    border: 2px solid var(--glass-border);
+    box-shadow: var(--glass-shadow), var(--neon-border);
+    backdrop-filter: blur(10px);
+}
+
+.multi-deck-upload-section h3 {
+    color: var(--pokemon-yellow);
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+    text-shadow: 0 0 10px rgba(255, 222, 0, 0.5);
+}
+
+#multi-deck-upload {
+    margin: 15px 0;
+    padding: 10px;
+    background: var(--glass-bg);
+    border: 2px solid var(--glass-border);
+    border-radius: 10px;
+    color: var(--text-color);
+}
+
+#multi-deck-price-summary {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 15px;
+    border: 2px solid var(--glass-border);
+    margin: 15px 0;
+    font-weight: bold;
+    color: var(--pokemon-yellow);
+    text-shadow: 0 0 5px rgba(255, 222, 0, 0.5);
+}
+
+#multi-deck-list {
+    margin-top: 20px;
+}
+
+#multi-deck-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+#multi-deck-list li {
+    background: var(--glass-bg);
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 15px;
+    border: 2px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+#multi-deck-list em {
+    color: var(--pokemon-blue);
+    font-weight: bold;
+}
+
+#multi-deck-list div[style*='color:red'] {
+    color: #ff6b6b !important;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+}
+
+.multi-deck-list-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.multi-deck-box {
+    background: var(--glass-bg);
+    border-radius: 15px;
+    padding: 20px;
+    border: 2px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.multi-deck-box:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--neon-glow);
+}
+
+.deck-cards-preview-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 15px 0;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    flex: 1;
+    min-height: 120px;
+}
+
+.deck-card-preview {
+    width: 60px;
+    height: 80px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 2px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.deck-card-preview.secondary {
+    width: 40px;
+    height: 55px;
+    opacity: 0.8;
+}
+
+.deck-card-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    transition: transform 0.3s ease;
+}
+
+.deck-card-preview.empty {
+    background: linear-gradient(135deg, #666, #999);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+    font-size: 0.8rem;
+    text-align: center;
+    opacity: 0.5;
+}
+
+.deck-card-name {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--text-color);
+    font-size: 0.7rem;
+    padding: 3px;
+    text-align: center;
+    font-weight: bold;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+}
+
+.deck-card-preview.secondary .deck-card-name {
+    font-size: 0.6rem;
+    padding: 2px;
+}
+
+.deck-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    flex-shrink: 0;
+}
+
+.main-card-name {
+    color: var(--pokemon-yellow);
+    font-weight: bold;
+    font-size: 0.9rem;
+    text-shadow: 0 0 5px rgba(255, 222, 0, 0.5);
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.main-card-count {
+    color: var(--pokemon-blue);
+    font-weight: bold;
+    font-size: 0.9rem;
+    text-shadow: 0 0 5px rgba(59, 76, 202, 0.5);
+} 

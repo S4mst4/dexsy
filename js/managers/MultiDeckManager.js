@@ -1,11 +1,12 @@
-import { Utils } from './utils.js';
+import { Utils } from '../utils.js';
 
 /**
  * Manages multiple deck functionality
  */
 export class MultiDeckManager {
-    constructor(cardManager) {
+    constructor(cardManager, deckBuilder) {
         this.cardManager = cardManager;
+        this.deckBuilder = deckBuilder;
         this.multiDecks = [];
         this.editDeckMode = false;
         this.hoveredDeckIdx = null;
@@ -203,11 +204,16 @@ export class MultiDeckManager {
         
         if (!this.deckKeyListener) {
             this.deckKeyListener = (e) => {
+                console.log('Key pressed:', e.key.toLowerCase(), 'Hovered deck index:', this.hoveredDeckIdx);
+                
                 if (e.key.toLowerCase() === 'i' && this.hoveredDeckIdx !== null) {
+                    console.log('I key pressed, prompting for main card selection');
                     this.promptChooseMainCard(this.hoveredDeckIdx);
                 } else if (e.key.toLowerCase() === 'e' && this.hoveredDeckIdx !== null) {
+                    console.log('E key pressed, handling deck edit');
                     this.handleEditDeck(this.hoveredDeckIdx);
                 } else if (e.key.toLowerCase() === 'r' && this.hoveredDeckIdx !== null) {
+                    console.log('R key pressed, handling deck removal');
                     this.handleRemoveDeck(this.hoveredDeckIdx);
                 }
             };
@@ -221,16 +227,26 @@ export class MultiDeckManager {
      */
     handleEditDeck(deckIdx) {
         const deck = this.multiDecks[deckIdx];
-        if (!deck) return;
+        if (!deck) {
+            console.error('No deck found at index:', deckIdx);
+            return;
+        }
         
-        if (this.cardManager.getDeckSize() === 0 || this.cardManager.getDeckSize() === 1) {
+        console.log('Handling edit for deck:', deck.name, 'Current deck size:', this.cardManager.getDeckSize());
+        
+        if (this.cardManager.getDeckSize() === 0) {
+            console.log('Deck is empty, loading uploaded deck automatically');
             this.editDeckMode = true;
             this.switchToUploadedDeck(deckIdx);
         } else {
+            console.log('Deck has cards, asking for confirmation');
             const confirmed = window.confirm(`Are you sure you want to edit/switch to deck: ${deck.name}? This will replace your current deck.`);
             if (confirmed) {
+                console.log('User confirmed, loading uploaded deck');
                 this.editDeckMode = true;
                 this.switchToUploadedDeck(deckIdx);
+            } else {
+                console.log('User cancelled deck loading');
             }
         }
     }
@@ -257,9 +273,25 @@ export class MultiDeckManager {
      */
     switchToUploadedDeck(deckIdx) {
         const deck = this.multiDecks[deckIdx];
-        if (!deck || !deck.cards) return;
+        if (!deck || !deck.cards) {
+            console.error('Invalid deck or deck has no cards:', deckIdx, deck);
+            return;
+        }
+        
+        console.log('Loading deck:', deck.name, 'with', deck.cards.length, 'cards');
         
         this.cardManager.replaceDeck(deck.cards.map(card => ({ ...card })));
+        
+        console.log('Deck replaced, current deck size:', this.cardManager.getDeckSize());
+        
+        // Update the deck display to show the new deck in the making deck tab
+        if (this.deckBuilder) {
+            this.deckBuilder.refreshDisplays();
+            this.deckBuilder.deckDisplayManager.resetAllCardStatus();
+            console.log('Deck display updated');
+        } else {
+            console.error('DeckBuilder not available');
+        }
     }
 
     /**
@@ -343,28 +375,51 @@ export class MultiDeckManager {
             max-width: 90vw;
             max-height: 80vh;
             overflow-y: auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-            gap: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         `;
         
         // Create header
-        let headerHTML = `<h2 style='grid-column:1/-1;text-align:center;margin-bottom:18px;'>Choose Main Cards for <span style='color:#2a3899;'>${deck.name}</span></h2>`;
+        let headerHTML = `<h2 style='text-align:center;margin-bottom:18px;'>Choose Main Cards for <span style='color:#2a3899;'>${deck.name}</span></h2>`;
         
         // Show current main cards if any
         if (deck.mainCards && deck.mainCards.length > 0) {
             headerHTML += this.createCurrentMainCardsDisplay(deck);
         }
         
-        headerHTML += `<div style='grid-column:1/-1;text-align:center;margin-bottom:15px;color:#666;font-size:0.9rem;'>Click a card to select it. You can have up to 3 main cards. The first card will be the main display, others will be smaller.</div>`;
+        headerHTML += `<div style='text-align:center;margin-bottom:15px;color:#666;font-size:0.9rem;'>Click a card to select it. You can have up to 3 main cards. The first card will be the main display, others will be smaller.</div>`;
         
         grid.innerHTML = headerHTML;
         
-        // Add card selection grid
+        // Create cards container with grid layout similar to main deck display
+        const cardsContainer = document.createElement('div');
+        cardsContainer.style.cssText = `
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            grid-auto-rows: 1fr;
+            flex: 1;
+        `;
+        
+        // Group cards by name and count duplicates
+        const cardCounts = new Map();
         deck.cards.forEach((card, idx) => {
-            const cardDiv = this.createCardSelectionElement(card, idx, deck, deckIdx, modal);
-            grid.appendChild(cardDiv);
+            const cardKey = card.name + (card.set?.name || '');
+            if (!cardCounts.has(cardKey)) {
+                cardCounts.set(cardKey, { card, indices: [], count: 0 });
+            }
+            cardCounts.get(cardKey).indices.push(idx);
+            cardCounts.get(cardKey).count++;
         });
+        
+        // Add card selection elements
+        Array.from(cardCounts.values()).forEach(({ card, indices, count }) => {
+            const cardDiv = this.createCardSelectionElement(card, indices[0], deck, deckIdx, modal, count, indices);
+            cardsContainer.appendChild(cardDiv);
+        });
+        
+        grid.appendChild(cardsContainer);
         
         // Add action buttons
         const buttonContainer = this.createActionButtons(deck, deckIdx, modal);
@@ -379,8 +434,9 @@ export class MultiDeckManager {
      * @returns {string} HTML string for current main cards display
      */
     createCurrentMainCardsDisplay(deck) {
-        let html = `<div style='grid-column:1/-1;display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:20px;'>`;
-        html += `<div style='text-align:center;'><strong>Current Main Cards:</strong></div>`;
+        let html = `<div style='text-align:center;'>`;
+        html += `<strong>Current Main Cards:</strong>`;
+        html += `</div>`;
         
         deck.mainCards.forEach((cardIdx, idx) => {
             const card = deck.cards[cardIdx];
@@ -398,7 +454,6 @@ export class MultiDeckManager {
                 </div>
             `;
         });
-        html += `</div>`;
         
         return html;
     }
@@ -410,13 +465,28 @@ export class MultiDeckManager {
      * @param {Object} deck - The deck object
      * @param {number} deckIdx - Deck index
      * @param {HTMLElement} modal - The modal element
+     * @param {number} count - Card count
+     * @param {Array} indices - Array of card indices
      * @returns {HTMLElement} Card selection element
      */
-    createCardSelectionElement(card, idx, deck, deckIdx, modal) {
+    createCardSelectionElement(card, idx, deck, deckIdx, modal, count, indices) {
         const cardDiv = document.createElement('div');
-        cardDiv.className = 'deck-card-preview';
-        cardDiv.style.cursor = 'pointer';
-        cardDiv.style.position = 'relative';
+        cardDiv.className = 'card';
+        cardDiv.style.cssText = `
+            background: var(--glass-bg, rgba(255, 255, 255, 0.1));
+            border-radius: 15px;
+            padding: 0px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 2.55/3.5;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            border: 2px solid var(--glass-border, rgba(255, 255, 255, 0.2));
+        `;
         
         const isSelected = deck.mainCards && deck.mainCards.includes(idx);
         const selectionIndex = deck.mainCards ? deck.mainCards.indexOf(idx) : -1;
@@ -424,13 +494,65 @@ export class MultiDeckManager {
         if (isSelected) {
             cardDiv.style.border = '2px solid #2a3899';
             cardDiv.style.background = 'rgba(42, 56, 153, 0.1)';
+            cardDiv.style.transform = 'translateY(-5px) scale(1.02)';
+            cardDiv.style.boxShadow = '0 8px 16px rgba(42, 56, 153, 0.3)';
         }
         
-        cardDiv.innerHTML = `
-            <img src="${card.images && card.images.small ? card.images.small : ''}" alt="${card.name}">
-            <div class="deck-card-name">${card.name}</div>
-            ${isSelected ? `<div style='position:absolute;top:5px;right:5px;background:#2a3899;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:bold;'>${selectionIndex + 1}</div>` : ''}
+        // Create image element
+        const img = document.createElement('img');
+        img.src = card.images && card.images.small ? card.images.small : '';
+        img.alt = card.name;
+        img.style.cssText = `
+            width: 100%;
+            height: 100%;
+            border-radius: 0px;
+            object-fit: contain;
         `;
+        
+        // Add count badge
+        const countBadge = document.createElement('div');
+        countBadge.style.cssText = `
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            z-index: 10;
+        `;
+        countBadge.textContent = `×${count}`;
+        
+        // Add selection indicator if selected
+        let selectionBadge = '';
+        if (isSelected) {
+            selectionBadge = `<div style='position:absolute;top:10px;right:10px;background:#2a3899;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:bold;z-index:10;'>${selectionIndex + 1}</div>`;
+        }
+        
+        cardDiv.innerHTML = selectionBadge;
+        cardDiv.insertBefore(img, cardDiv.firstChild);
+        cardDiv.appendChild(countBadge);
+        
+        // Add hover effect
+        cardDiv.addEventListener('mouseenter', () => {
+            if (!isSelected) {
+                cardDiv.style.transform = 'translateY(-5px) scale(1.02)';
+                cardDiv.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.3)';
+            }
+        });
+        
+        cardDiv.addEventListener('mouseleave', () => {
+            if (!isSelected) {
+                cardDiv.style.transform = 'translateY(0) scale(1)';
+                cardDiv.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+            }
+        });
         
         cardDiv.addEventListener('click', () => {
             this.handleCardSelection(card, idx, deck, deckIdx, modal);
@@ -450,14 +572,23 @@ export class MultiDeckManager {
     handleCardSelection(card, idx, deck, deckIdx, modal) {
         if (!deck.mainCards) deck.mainCards = [];
         
-        const isSelected = deck.mainCards.includes(idx);
+        // Check if any instance of this card is already selected
+        const cardKey = card.name + (card.set?.name || '');
+        const isSelected = deck.mainCards.some(selectedIdx => {
+            const selectedCard = deck.cards[selectedIdx];
+            const selectedCardKey = selectedCard.name + (selectedCard.set?.name || '');
+            return selectedCardKey === cardKey;
+        });
         
         if (isSelected) {
-            // Remove card from selection
-            const removeIndex = deck.mainCards.indexOf(idx);
-            deck.mainCards.splice(removeIndex, 1);
+            // Remove all instances of this card from selection
+            deck.mainCards = deck.mainCards.filter(selectedIdx => {
+                const selectedCard = deck.cards[selectedIdx];
+                const selectedCardKey = selectedCard.name + (selectedCard.set?.name || '');
+                return selectedCardKey !== cardKey;
+            });
         } else {
-            // Add card to selection (max 3)
+            // Add the first instance of this card to selection (max 3)
             if (deck.mainCards.length < 3) {
                 deck.mainCards.push(idx);
             } else {

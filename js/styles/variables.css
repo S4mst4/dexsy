@@ -1,0 +1,16 @@
+:root {
+    --primary-color: #FF0000;
+    --secondary-color: #CC0000;
+    --background-color: #1a1a2e;
+    --card-bg: rgba(255, 255, 255, 0.1);
+    --text-color: #ffffff;
+    --pokemon-yellow: #FFDE00;
+    --pokemon-blue: #3B4CCA;
+    --gradient-start: rgba(255, 0, 0, 0.8);
+    --gradient-end: rgba(204, 0, 0, 0.8);
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(0, 255, 0, 0.3);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    --neon-glow: 0 0 10px rgba(0, 255, 0, 0.5);
+    --neon-border: 0 0 15px rgba(0, 255, 0, 0.3);
+} 

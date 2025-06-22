@@ -1,0 +1,8 @@
+/* Main stylesheet that imports all modular CSS files */
+@import './base.css';
+@import './deck-controls.css';
+@import './search.css';
+@import './cards.css';
+@import './modal.css';
+@import './game.css';
+@import './multi-deck.css'; 

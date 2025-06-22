@@ -1,4 +1,4 @@
-import { Utils } from './utils.js';
+import { Utils } from '../utils.js';
 
 /**
  * Manages card search functionality including API calls and query building

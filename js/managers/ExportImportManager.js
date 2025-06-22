@@ -1,4 +1,4 @@
-import { Utils } from './utils.js';
+import { Utils } from '../utils.js';
 
 /**
  * Manages deck export and import functionality
@@ -6,7 +6,24 @@ import { Utils } from './utils.js';
 export class ExportImportManager {
     constructor() {
         this.fileInput = null;
+        this.deckDataCallback = null;
         this.initializeFileInput();
+    }
+
+    /**
+     * Set the callback function to get current deck data
+     * @param {Function} callback - Function that returns the current deck
+     */
+    setDeckData(callback) {
+        this.deckDataCallback = callback;
+    }
+
+    /**
+     * Get the current deck data
+     * @returns {Array} Current deck data
+     */
+    getCurrentDeck() {
+        return this.deckDataCallback ? this.deckDataCallback() : [];
     }
 
     /**
@@ -211,9 +228,14 @@ export class ExportImportManager {
 
     /**
      * Export deck as QR-compatible data
-     * @param {Array} deck - The deck to export
      */
-    exportQRData(deck) {
+    exportQRData() {
+        const deck = this.getCurrentDeck();
+        if (deck.length === 0) {
+            alert('No cards in deck to export.');
+            return;
+        }
+        
         const deckName = prompt('Enter a name for your deck:', 'My Pokemon Deck') || 'My Pokemon Deck';
         
         // Convert deck to Swift-compatible format
@@ -234,9 +256,14 @@ export class ExportImportManager {
 
     /**
      * Export deck as full data
-     * @param {Array} deck - The deck to export
      */
-    exportFullData(deck) {
+    exportFullData() {
+        const deck = this.getCurrentDeck();
+        if (deck.length === 0) {
+            alert('No cards in deck to export.');
+            return;
+        }
+        
         this.downloadJSON(deck, 'pokemon-deck-full.json');
         Utils.showNotification(true, 'Full Data deck exported successfully');
     }

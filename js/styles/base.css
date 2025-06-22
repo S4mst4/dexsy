@@ -1,0 +1,58 @@
+@import './variables.css';
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+    padding: 20px;
+    background-color: var(--background-color);
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(255, 222, 0, 0.1) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(59, 76, 202, 0.1) 0%, transparent 20%);
+    color: var(--text-color);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    margin: 20px 0;
+    color: var(--pokemon-yellow);
+    font-size: 3.5rem;
+    text-shadow: 0 0 10px rgba(255, 222, 0, 0.5);
+    letter-spacing: 2px;
+    font-weight: 800;
+}
+
+h2 {
+    text-align: center;
+    margin: 10px 0 20px 0;
+    color: var(--pokemon-blue);
+    font-size: 2rem;
+    text-shadow: 0 0 10px rgba(59, 76, 202, 0.5);
+    letter-spacing: 1px;
+}
+
+.disclaimer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 20px;
+    background: var(--glass-bg);
+    border-radius: 15px;
+    border: 2px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(10px);
+    font-size: 0.9rem;
+    color: #ccc;
+    line-height: 1.5;
+} 
