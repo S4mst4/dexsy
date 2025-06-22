@@ -22,6 +22,7 @@ A web application for building and managing custom card decks. Create, edit, and
 - Simulate starting hand and prize cards on decks with 40+ cards
 - Multi-deck upload and management
 - Price visibility toggle
+- Open decks directly in Table (table.c0di.com) for online play
 
 ## Export/Import Features
 
@@ -50,6 +51,21 @@ A web application for building and managing custom card decks. Create, edit, and
 - Click the 📂 (Import) button to import a deck
 - Supports both old format (array of cards) and new Swift-compatible format
 - Automatically converts between formats as needed
+
+## Table Integration
+
+### Open in Table
+- Click the 🎮 (Table) button to open your deck directly in [Table](https://table.c0di.com)
+- Your deck will be automatically loaded and ready for online play
+- Supports decks with up to 60 cards (standard Pokémon TCG deck size)
+- For very large decks, a warning will appear if the URL might be too long for some browsers
+- Uses the official Table deck sharing format for seamless integration
+
+### How it Works
+1. Your deck is converted to Table's required format
+2. The deck data is encoded and added to the Table URL
+3. Table automatically decodes and loads your deck on arrival
+4. You can immediately start playing with your custom deck
 
 ## Technologies Used
 

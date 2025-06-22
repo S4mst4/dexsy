@@ -117,6 +117,12 @@ export class DeckBuilder {
             importBtn.addEventListener('click', () => this.importDeck());
         }
         
+        // Open in Table button
+        const openInTableBtn = document.getElementById('openInTableBtn');
+        if (openInTableBtn) {
+            openInTableBtn.addEventListener('click', () => this.openDeckInTable());
+        }
+        
         // Clear button
         const clearBtn = document.getElementById('clearBtn');
         if (clearBtn) {
@@ -390,6 +396,58 @@ export class DeckBuilder {
             this.updateDeckDisplay();
             this.deckDisplayManager.resetAllCardStatus();
         });
+    }
+
+    /**
+     * Open deck in Table
+     */
+    openDeckInTable() {
+        const deck = this.cardManager.deck;
+        
+        if (deck.length === 0) {
+            alert('Your deck is empty. Please add some cards before opening in Table.');
+            return;
+        }
+
+        try {
+            // Convert deck to Table format
+            const tableDeck = deck.map(card => ({
+                front_image_url: card.images?.small || card.images?.large || '',
+                back_image_url: '', // Table will use default back
+                name: card.name || 'Unknown Card'
+            }));
+
+            // Filter out cards without images
+            const validCards = tableDeck.filter(card => card.front_image_url);
+            
+            if (validCards.length === 0) {
+                alert('No cards with valid images found in your deck. Please add cards with images before opening in Table.');
+                return;
+            }
+
+            // Encode deck for Table URL
+            const json = JSON.stringify(validCards);
+            const base64 = btoa(json)
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
+            
+            // Check URL length for very large decks
+            const tableUrl = `https://table.c0di.com?deck=${base64}`;
+            if (tableUrl.length > 20000) {
+                const proceed = confirm(`Your deck is very large (${validCards.length} cards). The URL will be ${Math.round(tableUrl.length / 1000)}KB long. This might cause issues in some browsers. Do you want to proceed anyway?`);
+                if (!proceed) {
+                    return;
+                }
+            }
+            
+            // Open in Table
+            window.open(tableUrl, '_blank');
+            
+        } catch (error) {
+            console.error('Error opening deck in Table:', error);
+            alert('An error occurred while preparing your deck for Table. Please try again.');
+        }
     }
 
     /**
