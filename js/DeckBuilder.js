@@ -426,8 +426,11 @@ export class DeckBuilder {
 
             // Create deck object with back image URL at deck level
             const deckForTable = {
-                cards: validCards,
-                back_image_url: 'https://images.pokemontcg.io/cardback.png' // Standard Pokémon card back
+                tableDeck: {
+                    name: "Dexsy Deck",
+                    back_image_url: 'https://images.pokemontcg.io/cardback.png', // Standard Pokémon card back
+                    cards: validCards
+                }
             };
 
             // Encode deck for Table URL
