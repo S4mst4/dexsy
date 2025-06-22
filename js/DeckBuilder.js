@@ -413,7 +413,6 @@ export class DeckBuilder {
             // Convert deck to Table format
             const tableDeck = deck.map(card => ({
                 front_image_url: card.images?.small || card.images?.large || '',
-                back_image_url: '', // Table will use default back
                 name: card.name || 'Unknown Card'
             }));
 
@@ -425,8 +424,14 @@ export class DeckBuilder {
                 return;
             }
 
+            // Create deck object with back image URL at deck level
+            const deckForTable = {
+                cards: validCards,
+                back_image_url: 'https://images.pokemontcg.io/cardback.png' // Standard Pokémon card back
+            };
+
             // Encode deck for Table URL
-            const json = JSON.stringify(validCards);
+            const json = JSON.stringify(deckForTable);
             const base64 = btoa(json)
                 .replace(/\+/g, '-')
                 .replace(/\//g, '_')
