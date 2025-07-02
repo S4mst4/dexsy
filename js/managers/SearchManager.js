@@ -63,7 +63,8 @@ export class SearchManager {
             const lowerQuery = query.toLowerCase();
             const mentionsSpecial = /\b(ex|gx|vstar|vmax|mega| v)\b/.test(lowerQuery);
             if (!mentionsSpecial) {
-                searchQuery = `name:"*${query}*" -name:"*EX" -name:"*GX" -name:"* V" -name:"*VSTAR" -name:"*VMAX" -name:"Mega*" -subtypes:"EX" -subtypes:"GX" -subtypes:"V" -subtypes:"VSTAR" -subtypes:"VMAX" -subtypes:"MEGA"`;
+                // Include all variants of the Pokémon (regular, full art, EX, GX, V, VSTAR, VMAX)
+                searchQuery = `name:"*${query}*"`;
             } else {
                 searchQuery = `name:"*${query}*"`;
             }

@@ -163,10 +163,55 @@ export class SearchComponent {
             this.searchResults.innerHTML = '';
         }
         
-        cards.forEach(card => {
+        // Sort cards by variant type for better organization
+        const sortedCards = cards.sort((a, b) => this.compareCardVariants(a, b));
+        
+        sortedCards.forEach(card => {
             const cardElement = this.createSearchResultCard(card);
             this.searchResults.appendChild(cardElement);
         });
+    }
+
+    /**
+     * Compare card variants for sorting
+     */
+    compareCardVariants(a, b) {
+        const variantOrder = {
+            'regular': 1,
+            'full art': 2,
+            'ex': 3,
+            'gx': 4,
+            'v': 5,
+            'vstar': 6,
+            'vmax': 7,
+            'mega': 8,
+            'prism star': 9,
+            'ace spec': 10
+        };
+        
+        const getVariantType = (card) => {
+            const name = card.name.toLowerCase();
+            const subtypes = (card.subtypes || []).map(s => s.toLowerCase());
+            
+            if (name.includes('vmax')) return 'vmax';
+            if (name.includes('vstar')) return 'vstar';
+            if (name.includes('gx')) return 'gx';
+            if (name.includes('ex')) return 'ex';
+            if (name.includes('mega')) return 'mega';
+            if (name.includes('prism star') || name.includes('♢')) return 'prism star';
+            if (name.includes('ace spec')) return 'ace spec';
+            if (name.includes('v') && !name.includes('vmax') && !name.includes('vstar')) return 'v';
+            
+            // Check for full art variants
+            if (subtypes.includes('full art') || name.includes('full art')) return 'full art';
+            
+            return 'regular';
+        };
+        
+        const variantA = getVariantType(a);
+        const variantB = getVariantType(b);
+        
+        return (variantOrder[variantA] || 999) - (variantOrder[variantB] || 999);
     }
 
     /**
@@ -176,11 +221,23 @@ export class SearchComponent {
         const cardDiv = document.createElement('div');
         cardDiv.className = 'card';
         
+        // Store card data as a data attribute for easy access
+        cardDiv.setAttribute('data-card-info', JSON.stringify({
+            name: card.name,
+            number: card.number,
+            setId: card.set?.id,
+            images: card.images,
+            tcgplayer: card.tcgplayer
+        }));
+        
         // Create image element
         const img = document.createElement('img');
         img.src = card.images?.small || card.images?.large || '';
         img.alt = card.name;
         img.loading = 'lazy';
+        
+        // Get price data
+        const priceData = Utils.getCardPriceData(card);
         
         // Add buttons for quantity control and TCGPlayer
         const buttonsHTML = `
@@ -192,6 +249,16 @@ export class SearchComponent {
 
         cardDiv.innerHTML = buttonsHTML;
         cardDiv.insertBefore(img, cardDiv.firstChild);
+
+        // Add price badge if price data is available
+        if (priceData.price) {
+            const priceBadge = document.createElement('div');
+            priceBadge.className = 'price-badge';
+            priceBadge.innerHTML = `
+                <span class="price-value">$${priceData.price.toFixed(2)}</span>
+            `;
+            cardDiv.appendChild(priceBadge);
+        }
 
         // Add event listeners
         this.addSearchCardEventListeners(cardDiv, card);
@@ -253,20 +320,26 @@ export class SearchComponent {
         const sortOrder = this.priceSortSelector.value;
         if (!sortOrder) return;
         
-        const cards = Array.from(this.searchResults.children).map(cardDiv => {
+        // Collect all cards
+        const allCards = [];
+        const cardElements = Array.from(this.searchResults.querySelectorAll('.card'));
+        
+        cardElements.forEach(cardDiv => {
             const cardData = this.extractCardDataFromElement(cardDiv);
-            return { element: cardDiv, card: cardData };
+            allCards.push({ element: cardDiv, card: cardData });
         });
         
-        cards.sort((a, b) => {
+        // Sort cards by price
+        allCards.sort((a, b) => {
             const priceA = Utils.getCardPriceData(a.card).price || 0;
             const priceB = Utils.getCardPriceData(b.card).price || 0;
             
             return sortOrder === 'low' ? priceA - priceB : priceB - priceA;
         });
         
+        // Re-display sorted cards
         this.searchResults.innerHTML = '';
-        cards.forEach(({ element }) => {
+        allCards.forEach(({ element }) => {
             this.searchResults.appendChild(element);
         });
     }
@@ -275,8 +348,16 @@ export class SearchComponent {
      * Extract card data from DOM element
      */
     extractCardDataFromElement(cardDiv) {
-        // This is a simplified version - in a real implementation,
-        // you'd want to store the card data as a data attribute
+        try {
+            const cardInfo = cardDiv.getAttribute('data-card-info');
+            if (cardInfo) {
+                return JSON.parse(cardInfo);
+            }
+        } catch (error) {
+            console.error('Error parsing card data:', error);
+        }
+        
+        // Fallback to extracting from image alt text
         const img = cardDiv.querySelector('img');
         const name = img?.alt || '';
         return { name };
